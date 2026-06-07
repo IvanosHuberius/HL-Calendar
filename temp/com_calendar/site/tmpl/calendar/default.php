@@ -47,6 +47,8 @@ $showSidebar      = (int) $cparams->get('show_sidebar', 1);
 $bhStart          = $cparams->get('business_hours_start', '08:00');
 $bhEnd            = $cparams->get('business_hours_end', '18:00');
 $defaultEvtColor  = $cparams->get('default_event_color', '#3788d8');
+$eventStyle       = $cparams->get('event_display_style', 'dot_medium');
+$eventDisplayFc   = ($eventStyle === 'bar') ? 'block' : 'auto';
 
 // Compute primary-light from primary color
 $pr = hexdec(substr($primaryColor, 1, 2));
@@ -71,7 +73,7 @@ $primaryLight = sprintf('#%02x%02x%02x', min(255, $pr + round((255 - $pr) * 0.85
     #jw-calendar-app .fc-day-today { background: <?php echo $todayHighlight; ?> !important; }
 </style>
 
-<div id="jw-calendar-app" class="jw-calendar-wrapper">
+<div id="jw-calendar-app" class="jw-calendar-wrapper jw-evtstyle-<?php echo $eventStyle; ?>">
     <?php if ($showSidebar) : ?>
     <!-- Sidebar -->
     <div class="jw-calendar-sidebar" id="calSidebar">
@@ -173,6 +175,25 @@ $primaryLight = sprintf('#%02x%02x%02x', min(255, $pr + round((255 - $pr) * 0.85
                 </div>
             </div>
 
+            <div class="jw-form-group" id="holidaySkipGroup" style="display:none">
+                <label class="jw-checkbox-label">
+                    <input type="checkbox" id="eventSkipHolidays">
+                    <span><?php echo $localeShort === 'de' ? 'An gesetzlichen Feiertagen aussetzen' : 'Skip on public holidays'; ?></span>
+                </label>
+            </div>
+
+            <div class="jw-form-group" id="holidayRegionGroup" style="display:none">
+                <div class="jw-form-row">
+                    <select id="eventHolidayCountry" class="jw-input jw-form-half"></select>
+                    <select id="eventHolidaySubdiv" class="jw-input jw-form-half"></select>
+                </div>
+            </div>
+
+            <div class="jw-form-group" id="exceptionDatesGroup" style="display:none">
+                <label for="eventExceptionDates"><?php echo $localeShort === 'de' ? 'Ausnahme-Daten (manuell, JJJJ-MM-TT)' : 'Exception dates (manual, YYYY-MM-DD)'; ?></label>
+                <input type="text" id="eventExceptionDates" class="jw-input" placeholder="2026-12-25, 2026-12-26">
+            </div>
+
         </div>
         <div class="jw-modal-footer">
             <button type="button" class="jw-btn jw-btn-delete" id="btnDeleteEvent" style="display:none;">
@@ -260,6 +281,65 @@ document.addEventListener('DOMContentLoaded', function() {
     let CATEGORIES = <?php echo $categories; ?>;
     const LOCALE = '<?php echo $localeShort; ?>';
     const DEFAULT_COLOR = '<?php echo $defaultEvtColor; ?>';
+    const EVENT_STYLE = '<?php echo $eventStyle; ?>';
+
+    // Pick a readable text color (black/white) for a given background hex
+    function pickTextColor(hex) {
+        hex = (hex || '').replace('#', '');
+        if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+        if (hex.length < 6) return '#ffffff';
+        const r = parseInt(hex.substr(0,2),16), g = parseInt(hex.substr(2,2),16), b = parseInt(hex.substr(4,2),16);
+        const lum = (0.299*r + 0.587*g + 0.114*b) / 255;
+        return lum > 0.6 ? '#202124' : '#ffffff';
+    }
+
+    // Countries & regions for the holiday-skip feature (ISO 3166 / 3166-2)
+    const HOLIDAY_COUNTRIES = {
+        'DE': { name: 'Deutschland', subs: [['DE-BW','Baden-Württemberg'],['DE-BY','Bayern'],['DE-BE','Berlin'],['DE-BB','Brandenburg'],['DE-HB','Bremen'],['DE-HH','Hamburg'],['DE-HE','Hessen'],['DE-MV','Mecklenburg-Vorpommern'],['DE-NI','Niedersachsen'],['DE-NW','Nordrhein-Westfalen'],['DE-RP','Rheinland-Pfalz'],['DE-SL','Saarland'],['DE-SN','Sachsen'],['DE-ST','Sachsen-Anhalt'],['DE-SH','Schleswig-Holstein'],['DE-TH','Thüringen']] },
+        'AT': { name: 'Österreich', subs: [['AT-1','Burgenland'],['AT-2','Kärnten'],['AT-3','Niederösterreich'],['AT-4','Oberösterreich'],['AT-5','Salzburg'],['AT-6','Steiermark'],['AT-7','Tirol'],['AT-8','Vorarlberg'],['AT-9','Wien']] },
+        'CH': { name: 'Schweiz', subs: [['CH-AG','Aargau'],['CH-AI','Appenzell I.Rh.'],['CH-AR','Appenzell A.Rh.'],['CH-BL','Basel-Landschaft'],['CH-BS','Basel-Stadt'],['CH-BE','Bern'],['CH-FR','Freiburg'],['CH-GE','Genf'],['CH-GL','Glarus'],['CH-GR','Graubünden'],['CH-JU','Jura'],['CH-LU','Luzern'],['CH-NE','Neuenburg'],['CH-NW','Nidwalden'],['CH-OW','Obwalden'],['CH-SG','St. Gallen'],['CH-SH','Schaffhausen'],['CH-SO','Solothurn'],['CH-SZ','Schwyz'],['CH-TG','Thurgau'],['CH-TI','Tessin'],['CH-UR','Uri'],['CH-VD','Waadt'],['CH-VS','Wallis'],['CH-ZG','Zug'],['CH-ZH','Zürich']] },
+        'FR': { name: 'France', subs: [] },
+        'IT': { name: 'Italia', subs: [] },
+        'LU': { name: 'Luxembourg', subs: [] },
+        'NL': { name: 'Nederland', subs: [] },
+        'BE': { name: 'Belgique', subs: [] },
+        'GB': { name: 'United Kingdom', subs: [] },
+        'ES': { name: 'España', subs: [] },
+        'PL': { name: 'Polska', subs: [] },
+        'US': { name: 'United States', subs: [] }
+    };
+
+    function fillCountrySelect(sel) {
+        sel.innerHTML = '';
+        Object.keys(HOLIDAY_COUNTRIES).forEach(code => {
+            const o = document.createElement('option');
+            o.value = code; o.textContent = HOLIDAY_COUNTRIES[code].name;
+            sel.appendChild(o);
+        });
+    }
+
+    function fillSubdivSelect(sel, country, selected) {
+        sel.innerHTML = '';
+        const o0 = document.createElement('option');
+        o0.value = ''; o0.textContent = LOCALE === 'de' ? '— Landesweit —' : '— Nationwide —';
+        sel.appendChild(o0);
+        const subs = (HOLIDAY_COUNTRIES[country] || {}).subs || [];
+        subs.forEach(pair => {
+            const o = document.createElement('option');
+            o.value = pair[0]; o.textContent = pair[1];
+            sel.appendChild(o);
+        });
+        sel.value = selected || '';
+        sel.disabled = subs.length === 0;
+    }
+
+    function toggleHolidayUI() {
+        const isRecur = document.getElementById('eventRecurrence').value !== 'none';
+        const skip = document.getElementById('eventSkipHolidays').checked;
+        document.getElementById('holidaySkipGroup').style.display = isRecur ? '' : 'none';
+        document.getElementById('exceptionDatesGroup').style.display = isRecur ? '' : 'none';
+        document.getElementById('holidayRegionGroup').style.display = (isRecur && skip) ? '' : 'none';
+    }
 
     // Category color palette
     const CAT_COLORS = ['#7986cb','#33b679','#8e24aa','#e67c73','#f6bf26','#f4511e','#039be5','#616161','#3f51b5','#0b8043','#d50000','#f09300','#009688','#795548','#c2185b','#607d8b'];
@@ -451,6 +531,7 @@ document.addEventListener('DOMContentLoaded', function() {
         customGroup.style.display = recType === 'custom' ? '' : 'none';
         endGroup.style.display = recType !== 'none' ? '' : 'none';
         if (recType === 'custom') updateCustomUnits();
+        toggleHolidayUI();
     }
 
     function toggleRecurrenceEndDate() {
@@ -635,6 +716,13 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('eventRecurrenceEnd').value = '';
             document.getElementById('eventRecurrenceEnd').style.display = 'none';
         }
+        // Holiday-skip / exception settings
+        document.getElementById('eventSkipHolidays').checked = !!(+props.skip_holidays);
+        const editCountry = HOLIDAY_COUNTRIES[props.holiday_country] ? props.holiday_country : 'DE';
+        document.getElementById('eventHolidayCountry').value = editCountry;
+        fillSubdivSelect(document.getElementById('eventHolidaySubdiv'), editCountry, props.holiday_subdivision || '');
+        document.getElementById('eventExceptionDates').value = props.exception_dates || '';
+        toggleHolidayUI();
         document.getElementById('btnDeleteEvent').style.display = '';
 
         document.getElementById('eventModal').style.display = 'flex';
@@ -667,6 +755,11 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('eventRecurrenceEnd').style.display = 'none';
         document.getElementById('eventCustomInterval').value = '1';
         document.getElementById('eventCustomUnit').value = 'days';
+        document.getElementById('eventSkipHolidays').checked = false;
+        document.getElementById('eventHolidayCountry').value = 'DE';
+        fillSubdivSelect(document.getElementById('eventHolidaySubdiv'), 'DE', '');
+        document.getElementById('eventExceptionDates').value = '';
+        toggleHolidayUI();
         document.getElementById('btnDeleteEvent').style.display = 'none';
 
         document.getElementById('eventModal').style.display = 'flex';
@@ -730,6 +823,10 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             params.append('recurrence_end', '');
         }
+        params.append('skip_holidays', (recType !== 'none' && document.getElementById('eventSkipHolidays').checked) ? 1 : 0);
+        params.append('holiday_country', document.getElementById('eventHolidayCountry').value || '');
+        params.append('holiday_subdivision', document.getElementById('eventHolidaySubdiv').value || '');
+        params.append('exception_dates', document.getElementById('eventExceptionDates').value || '');
         params.append(TOKEN_NAME, 1);
 
         console.log('[JWCalendar] saveEvent data:', params.toString());
@@ -782,6 +879,7 @@ document.addEventListener('DOMContentLoaded', function() {
     calendar = new FullCalendar.Calendar(calendarEl, {
         locale: LOCALE,
         initialView: '<?php echo $defaultView; ?>',
+        eventDisplay: '<?php echo $eventDisplayFc; ?>',
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
@@ -883,6 +981,12 @@ document.addEventListener('DOMContentLoaded', function() {
         eventDidMount: function(info) {
             // Add tooltip
             info.el.title = info.event.title;
+            // Bar style in month view: ensure the title stays readable on any colour
+            if (EVENT_STYLE === 'bar' && info.el.classList.contains('fc-daygrid-block-event')) {
+                const txt = pickTextColor(info.event.backgroundColor || DEFAULT_COLOR);
+                info.el.style.setProperty('--fc-event-text-color', txt);
+                info.el.style.color = txt;
+            }
         },
 
         datesSet: function(info) {
@@ -917,6 +1021,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Event handlers
     initCategories();
+    fillCountrySelect(document.getElementById('eventHolidayCountry'));
+    fillSubdivSelect(document.getElementById('eventHolidaySubdiv'), 'DE', '');
 
     if (document.getElementById('btnCreateEvent')) {
         document.getElementById('btnCreateEvent').addEventListener('click', () => openNewModal());
@@ -932,6 +1038,10 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('eventEnd').addEventListener('change', function() { updateRecurrenceOptions(); if (document.getElementById('eventRecurrence').value === 'custom') updateCustomUnits(); });
     document.getElementById('eventRecurrence').addEventListener('change', toggleRecurrenceEnd);
     document.getElementById('eventRecurrenceEndType').addEventListener('change', toggleRecurrenceEndDate);
+    document.getElementById('eventSkipHolidays').addEventListener('change', toggleHolidayUI);
+    document.getElementById('eventHolidayCountry').addEventListener('change', function() {
+        fillSubdivSelect(document.getElementById('eventHolidaySubdiv'), this.value, '');
+    });
     document.getElementById('popupClose').addEventListener('click', hidePopup);
     document.getElementById('popupEdit').addEventListener('click', () => {
         if (currentPopupEvent) openEditModal(currentPopupEvent);

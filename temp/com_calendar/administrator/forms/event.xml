@@ -98,6 +98,41 @@
             translateformat="false"
         />
         <field
+            name="skip_holidays"
+            type="list"
+            label="COM_CALENDAR_FIELD_SKIP_HOLIDAYS"
+            description="COM_CALENDAR_FIELD_SKIP_HOLIDAYS_DESC"
+            default="0"
+            showon="recurrence_type!:none"
+        >
+            <option value="0">JNO</option>
+            <option value="1">JYES</option>
+        </field>
+        <field
+            name="holiday_country"
+            type="text"
+            label="COM_CALENDAR_FIELD_HOLIDAY_COUNTRY"
+            description="COM_CALENDAR_FIELD_HOLIDAY_COUNTRY_DESC"
+            maxlength="2"
+            default="DE"
+            showon="recurrence_type!:none[AND]skip_holidays:1"
+        />
+        <field
+            name="holiday_subdivision"
+            type="text"
+            label="COM_CALENDAR_FIELD_HOLIDAY_SUBDIVISION"
+            description="COM_CALENDAR_FIELD_HOLIDAY_SUBDIVISION_DESC"
+            maxlength="6"
+            showon="recurrence_type!:none[AND]skip_holidays:1"
+        />
+        <field
+            name="exception_dates"
+            type="text"
+            label="COM_CALENDAR_FIELD_EXCEPTION_DATES"
+            description="COM_CALENDAR_FIELD_EXCEPTION_DATES_DESC"
+            showon="recurrence_type!:none"
+        />
+        <field
             name="state"
             type="list"
             label="JSTATUS"

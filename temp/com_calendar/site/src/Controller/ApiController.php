@@ -92,16 +92,26 @@ class ApiController extends BaseController
                     'recurrence_type' => $event->recurrence_type,
                     'recurrence_interval' => (int) $event->recurrence_interval,
                     'recurrence_end' => $event->recurrence_end ?: '',
+                    'skip_holidays' => (int) ($event->skip_holidays ?? 0),
+                    'holiday_country' => $event->holiday_country ?? '',
+                    'holiday_subdivision' => $event->holiday_subdivision ?? '',
+                    'exception_dates' => $event->exception_dates ?? '',
                     'created_by' => (int) $event->created_by,
                     'editable' => ($user->id > 0 && ($user->id == $event->created_by || $user->authorise('core.edit', 'com_calendar'))),
                 ],
             ];
-            $result[] = $eventData;
 
             // Generate recurring events
             if ($event->recurrence_type !== 'none' && $event->recurrence_type) {
-                $recurrences = $this->generateRecurrences($event, $start, $end, $user);
+                // The base instance is itself subject to holiday/exception skipping
+                $holidayCache = [];
+                if (!$this->isExcludedDate($event, new \DateTime($event->start_date), $holidayCache)) {
+                    $result[] = $eventData;
+                }
+                $recurrences = $this->generateRecurrences($event, $start, $end, $user, $holidayCache);
                 $result = array_merge($result, $recurrences);
+            } else {
+                $result[] = $eventData;
             }
         }
 
@@ -142,7 +152,24 @@ class ApiController extends BaseController
             'recurrence_type' => 'string',
             'recurrence_interval' => 'int',
             'recurrence_end' => 'string',
+            'skip_holidays' => 'int',
+            'holiday_country' => 'string',
+            'holiday_subdivision' => 'string',
+            'exception_dates' => 'string',
         ]);
+
+        // Sanitise holiday-skip / exception fields
+        $data['skip_holidays'] = !empty($data['skip_holidays']) ? 1 : 0;
+        $data['holiday_country'] = preg_match('/^[A-Za-z]{2}$/', $data['holiday_country'] ?? '')
+            ? strtoupper($data['holiday_country']) : '';
+        $data['holiday_subdivision'] = preg_match('/^[A-Za-z]{2}-[A-Za-z0-9]{1,3}$/', $data['holiday_subdivision'] ?? '')
+            ? strtoupper($data['holiday_subdivision']) : '';
+        if (!empty($data['exception_dates'])) {
+            preg_match_all('/\d{4}-\d{2}-\d{2}/', $data['exception_dates'], $exMatches);
+            $data['exception_dates'] = implode(',', $exMatches[0]);
+        } else {
+            $data['exception_dates'] = '';
+        }
 
         $db = Factory::getContainer()->get('DatabaseDriver');
 
@@ -489,7 +516,7 @@ class ApiController extends BaseController
     /**
      * Generate recurring event instances
      */
-    private function generateRecurrences($event, $rangeStart, $rangeEnd, $user): array
+    private function generateRecurrences($event, $rangeStart, $rangeEnd, $user, array &$holidayCache = []): array
     {
         $result = [];
         $interval = max(1, (int) $event->recurrence_interval);
@@ -558,6 +585,11 @@ class ApiController extends BaseController
             $currentEnd->add($duration);
 
             if ($currentEnd >= $rangeStartDt) {
+                // Skip occurrences that fall on a holiday or a manual exception date
+                if ($this->isExcludedDate($event, $current, $holidayCache)) {
+                    continue;
+                }
+
                 // FullCalendar expects exclusive end for all-day events (+1 day)
                 $recDisplayEnd = $currentEnd->format('Y-m-d H:i:s');
                 if ($event->all_day) {
@@ -580,6 +612,10 @@ class ApiController extends BaseController
                         'recurrence_type' => $event->recurrence_type,
                         'recurrence_interval' => (int) $event->recurrence_interval,
                         'recurrence_end' => $event->recurrence_end ?: '',
+                        'skip_holidays' => (int) ($event->skip_holidays ?? 0),
+                        'holiday_country' => $event->holiday_country ?? '',
+                        'holiday_subdivision' => $event->holiday_subdivision ?? '',
+                        'exception_dates' => $event->exception_dates ?? '',
                         'created_by' => (int) $event->created_by,
                         'editable' => ($user->id > 0 && ($user->id == $event->created_by || $user->authorise('core.edit', 'com_calendar'))),
                     ],
@@ -588,5 +624,44 @@ class ApiController extends BaseController
         }
 
         return $result;
+    }
+
+    /**
+     * Decide whether a single occurrence date must be skipped, because it is a
+     * manual exception date or (optionally) a public holiday in the configured region.
+     * Holiday lookups are cached per year in $holidayCache for the duration of the request.
+     */
+    private function isExcludedDate($event, \DateTime $date, array &$holidayCache): bool
+    {
+        $ymd = $date->format('Y-m-d');
+
+        // 1) Manual exception dates (comma/space/semicolon separated YYYY-MM-DD)
+        if (!empty($event->exception_dates)) {
+            $list = preg_split('/[\s,;]+/', trim($event->exception_dates));
+            if (in_array($ymd, $list, true)) {
+                return true;
+            }
+        }
+
+        // 2) Public holidays via the OpenHolidays API (cached)
+        if (!empty($event->skip_holidays) && !empty($event->holiday_country)) {
+            $year = (int) $date->format('Y');
+            $cacheKey = $event->holiday_country . '|' . ($event->holiday_subdivision ?? '') . '|' . $year;
+
+            if (!isset($holidayCache[$cacheKey])) {
+                $service = new \Jewe\Component\Calendar\Site\Service\HolidayService();
+                $holidayCache[$cacheKey] = $service->getHolidays(
+                    $event->holiday_country,
+                    $event->holiday_subdivision ?? '',
+                    $year
+                );
+            }
+
+            if (in_array($ymd, $holidayCache[$cacheKey], true)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

@@ -3,7 +3,7 @@
 ## Projekt-Kurzinfo
 - **Name:** HL Kalender (JW Calendar)
 - **Typ:** Joomla 6 Package (`pkg_jwcalendar`) mit Komponente + Modul
-- **Version:** 1.7.2 (Final, seit 2026-03-28)
+- **Version:** 1.8.0 (in Vorbereitung; Vorgänger 1.7.2 Final)
 - **JED:** https://extensions.joomla.org/extension/calendars-a-events/hl-calendar/
 - **Autor:** huberlabs.ch (support@huberlabs.ch)
 - **Lizenz:** GPLv2+
@@ -65,9 +65,16 @@ Alle Aufrufe via `index.php?option=com_calendar&task=api.<method>`:
 
 ## DB-Tabellen
 
-- `#__calendar_events` – Events (title, description, location, start/end_date, all_day, color, category_id, recurrence_*, reminder_minutes, state, access, created_by, params)
+- `#__calendar_events` – Events (title, description, location, start/end_date, all_day, color, category_id, recurrence_*, **skip_holidays, holiday_country, holiday_subdivision, exception_dates**, reminder_minutes, state, access, created_by, params)
 - `#__calendar_categories` – Kategorien (title, color, description, state, access, ordering)
+- `#__calendar_holidays` – Feiertags-Cache (country, subdivision, hyear, dates, fetched) – ab 1.8.0
 - 5 Default-Kategorien: Allgemein, Arbeit, Persoenlich, Familie, Feiertage
+- Schema-Updates: `administrator/sql/updates/mysql/<version>.sql` (z.B. `1.8.0.sql`)
+
+## Features ab 1.8.0
+
+- **Termin-Darstellung** (`event_display_style` in config.xml): Punkt klein/mittel/groß oder Balken. CSS-Klasse `jw-evtstyle-*` am Wrapper, `eventDisplay:'block'` für Balken, `pickTextColor()` für Kontrast.
+- **Feiertags-Aussetzung:** `HolidayService` (`site/src/Service/HolidayService.php`) holt gesetzliche Feiertage von der OpenHolidays-API und cached sie in `#__calendar_holidays`. `ApiController::isExcludedDate()` prüft pro Wiederholungs-Termin (Feiertag ODER manuelle Ausnahme). Land/Bundesland-Daten liegen als `HOLIDAY_COUNTRIES` im Frontend-JS (Komponente + Modul).
 
 ## Build-Prozess
 

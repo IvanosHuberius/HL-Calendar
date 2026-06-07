@@ -7,7 +7,7 @@
     <license>GNU General Public License version 2 or later</license>
     <authorEmail>support@huberlabs.ch</authorEmail>
     <authorUrl>https://www.eiwtestzone.ch/huberlabs-extensions/</authorUrl>
-    <version>1.7.2</version>
+    <version>1.8.0</version>
     <description>COM_CALENDAR_DESC</description>
     <namespace path="src">Jewe\Component\Calendar</namespace>
 
@@ -21,6 +21,11 @@
             <file driver="mysql" charset="utf8">sql/uninstall.mysql.sql</file>
         </sql>
     </uninstall>
+    <update>
+        <schemas>
+            <schemapath type="mysql">sql/updates/mysql</schemapath>
+        </schemas>
+    </update>
 
     <files folder="site">
         <folder>services</folder>
@@ -60,6 +65,6 @@
         </submenu>
     </administration>
     <updateservers>
-        <server type="extension" name="HL Calendar Updates">https://www.eiwtestzone.ch/huberlabs-extensions/updates/jwcalendar_update.xml</server>
+        <server type="extension" name="HL Calendar Updates">https://raw.githubusercontent.com/IvanosHuberius/HL-Calendar/main/update_server/jwcalendar_update.xml</server>
     </updateservers>
 </extension>

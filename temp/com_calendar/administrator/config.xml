@@ -151,6 +151,19 @@
             default="#3788d8"
         />
 
+        <field
+            name="event_display_style"
+            type="list"
+            label="COM_CALENDAR_CONFIG_EVENT_DISPLAY"
+            description="COM_CALENDAR_CONFIG_EVENT_DISPLAY_DESC"
+            default="dot_medium"
+        >
+            <option value="dot_small">COM_CALENDAR_EVENT_DISPLAY_DOT_SMALL</option>
+            <option value="dot_medium">COM_CALENDAR_EVENT_DISPLAY_DOT_MEDIUM</option>
+            <option value="dot_large">COM_CALENDAR_EVENT_DISPLAY_DOT_LARGE</option>
+            <option value="bar">COM_CALENDAR_EVENT_DISPLAY_BAR</option>
+        </field>
+
     </fieldset>
 
     <fieldset name="permissions" label="JCONFIG_PERMISSIONS_LABEL" description="JCONFIG_PERMISSIONS_DESC">

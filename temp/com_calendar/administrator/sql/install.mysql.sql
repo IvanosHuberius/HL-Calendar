@@ -12,6 +12,10 @@ CREATE TABLE IF NOT EXISTS `#__calendar_events` (
     `recurrence_interval` int unsigned DEFAULT 1,
     `recurrence_end` datetime DEFAULT NULL,
     `recurrence_days` varchar(50) DEFAULT '',
+    `skip_holidays` tinyint(1) NOT NULL DEFAULT 0,
+    `holiday_country` varchar(2) NOT NULL DEFAULT '',
+    `holiday_subdivision` varchar(6) NOT NULL DEFAULT '',
+    `exception_dates` text,
     `reminder_minutes` int DEFAULT 0,
     `state` tinyint(1) NOT NULL DEFAULT 1,
     `access` int unsigned NOT NULL DEFAULT 1,
@@ -51,3 +55,15 @@ INSERT INTO `#__calendar_categories` (`title`, `color`, `description`, `state`, 
 ('Persönlich', '#33b679', 'Persönliche Termine', 1, NOW()),
 ('Familie', '#f6bf26', 'Familientermine', 1, NOW()),
 ('Feiertage', '#8e24aa', 'Feiertage und besondere Tage', 1, NOW());
+
+-- Holiday cache (public/statutory holidays fetched from OpenHolidays API)
+CREATE TABLE IF NOT EXISTS `#__calendar_holidays` (
+    `id` int unsigned NOT NULL AUTO_INCREMENT,
+    `country` varchar(2) NOT NULL DEFAULT '',
+    `subdivision` varchar(6) NOT NULL DEFAULT '',
+    `hyear` smallint unsigned NOT NULL DEFAULT 0,
+    `dates` mediumtext,
+    `fetched` datetime DEFAULT NULL,
+    PRIMARY KEY (`id`),
+    UNIQUE KEY `idx_csy` (`country`, `subdivision`, `hyear`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 DEFAULT COLLATE=utf8mb4_unicode_ci;

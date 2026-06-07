@@ -48,6 +48,8 @@ $borderColor     = $cparams->get('border_color', '#dadce0');
 $hoverBg         = $cparams->get('hover_bg_color', '#f1f3f4');
 $sidebarBg       = $cparams->get('sidebar_bg_color', '#ffffff');
 $defaultEvtColor = $cparams->get('default_event_color', '#3788d8');
+$eventStyle      = $cparams->get('event_display_style', 'dot_medium');
+$eventDisplayFc  = ($eventStyle === 'bar') ? 'block' : 'auto';
 
 $pr = hexdec(substr($primaryColor, 1, 2));
 $pg = hexdec(substr($primaryColor, 3, 2));
@@ -74,7 +76,7 @@ $moduleId = 'jwcal_' . $module->id;
     #<?php echo $moduleId; ?>_app .fc-day-today { background: <?php echo $todayHighlight; ?> !important; }
 </style>
 
-<div id="<?php echo $moduleId; ?>_app" class="jw-calendar-wrapper">
+<div id="<?php echo $moduleId; ?>_app" class="jw-calendar-wrapper jw-evtstyle-<?php echo $eventStyle; ?>">
     <?php if ($showSidebar) : ?>
     <!-- Sidebar -->
     <div class="jw-calendar-sidebar" id="<?php echo $moduleId; ?>_sidebar">
@@ -175,6 +177,25 @@ $moduleId = 'jwcal_' . $module->id;
                 </div>
             </div>
 
+            <div class="jw-form-group" id="<?php echo $moduleId; ?>_holidaySkipGroup" style="display:none">
+                <label class="jw-checkbox-label" style="display:flex;align-items:center;gap:8px;">
+                    <input type="checkbox" id="<?php echo $moduleId; ?>_evtSkipHolidays" style="width:18px;height:18px;cursor:pointer;">
+                    <span><?php echo $localeShort === 'de' ? 'An gesetzlichen Feiertagen aussetzen' : 'Skip on public holidays'; ?></span>
+                </label>
+            </div>
+
+            <div class="jw-form-group" id="<?php echo $moduleId; ?>_holidayRegionGroup" style="display:none">
+                <div class="jw-form-row">
+                    <select id="<?php echo $moduleId; ?>_evtHolidayCountry" class="jw-input jw-form-half"></select>
+                    <select id="<?php echo $moduleId; ?>_evtHolidaySubdiv" class="jw-input jw-form-half"></select>
+                </div>
+            </div>
+
+            <div class="jw-form-group" id="<?php echo $moduleId; ?>_exceptionDatesGroup" style="display:none">
+                <label for="<?php echo $moduleId; ?>_evtExceptionDates"><?php echo $localeShort === 'de' ? 'Ausnahme-Daten (manuell, JJJJ-MM-TT)' : 'Exception dates (manual, YYYY-MM-DD)'; ?></label>
+                <input type="text" id="<?php echo $moduleId; ?>_evtExceptionDates" class="jw-input" placeholder="2026-12-25, 2026-12-26">
+            </div>
+
         </div>
         <div class="jw-modal-footer">
             <button type="button" class="jw-btn jw-btn-delete" id="<?php echo $moduleId; ?>_btnDel" style="display:none;">
@@ -268,7 +289,66 @@ document.addEventListener('DOMContentLoaded', function() {
     let CATEGORIES = <?php echo $categoriesJson; ?>;
     const LOC = '<?php echo $localeShort; ?>';
     const DEFAULT_COLOR = '<?php echo $defaultEvtColor; ?>';
+    const EVENT_STYLE = '<?php echo $eventStyle; ?>';
     const COMPONENT_URL = '<?php echo Uri::root(); ?>index.php?option=com_calendar&task=api.';
+
+    // Pick a readable text color (black/white) for a given background hex
+    function pickTextColor(hex) {
+        hex = (hex || '').replace('#', '');
+        if (hex.length === 3) hex = hex.split('').map(c => c + c).join('');
+        if (hex.length < 6) return '#ffffff';
+        const r = parseInt(hex.substr(0,2),16), g = parseInt(hex.substr(2,2),16), b = parseInt(hex.substr(4,2),16);
+        const lum = (0.299*r + 0.587*g + 0.114*b) / 255;
+        return lum > 0.6 ? '#202124' : '#ffffff';
+    }
+
+    // Countries & regions for the holiday-skip feature (ISO 3166 / 3166-2)
+    const HOLIDAY_COUNTRIES = {
+        'DE': { name: 'Deutschland', subs: [['DE-BW','Baden-Württemberg'],['DE-BY','Bayern'],['DE-BE','Berlin'],['DE-BB','Brandenburg'],['DE-HB','Bremen'],['DE-HH','Hamburg'],['DE-HE','Hessen'],['DE-MV','Mecklenburg-Vorpommern'],['DE-NI','Niedersachsen'],['DE-NW','Nordrhein-Westfalen'],['DE-RP','Rheinland-Pfalz'],['DE-SL','Saarland'],['DE-SN','Sachsen'],['DE-ST','Sachsen-Anhalt'],['DE-SH','Schleswig-Holstein'],['DE-TH','Thüringen']] },
+        'AT': { name: 'Österreich', subs: [['AT-1','Burgenland'],['AT-2','Kärnten'],['AT-3','Niederösterreich'],['AT-4','Oberösterreich'],['AT-5','Salzburg'],['AT-6','Steiermark'],['AT-7','Tirol'],['AT-8','Vorarlberg'],['AT-9','Wien']] },
+        'CH': { name: 'Schweiz', subs: [['CH-AG','Aargau'],['CH-AI','Appenzell I.Rh.'],['CH-AR','Appenzell A.Rh.'],['CH-BL','Basel-Landschaft'],['CH-BS','Basel-Stadt'],['CH-BE','Bern'],['CH-FR','Freiburg'],['CH-GE','Genf'],['CH-GL','Glarus'],['CH-GR','Graubünden'],['CH-JU','Jura'],['CH-LU','Luzern'],['CH-NE','Neuenburg'],['CH-NW','Nidwalden'],['CH-OW','Obwalden'],['CH-SG','St. Gallen'],['CH-SH','Schaffhausen'],['CH-SO','Solothurn'],['CH-SZ','Schwyz'],['CH-TG','Thurgau'],['CH-TI','Tessin'],['CH-UR','Uri'],['CH-VD','Waadt'],['CH-VS','Wallis'],['CH-ZG','Zug'],['CH-ZH','Zürich']] },
+        'FR': { name: 'France', subs: [] },
+        'IT': { name: 'Italia', subs: [] },
+        'LU': { name: 'Luxembourg', subs: [] },
+        'NL': { name: 'Nederland', subs: [] },
+        'BE': { name: 'Belgique', subs: [] },
+        'GB': { name: 'United Kingdom', subs: [] },
+        'ES': { name: 'España', subs: [] },
+        'PL': { name: 'Polska', subs: [] },
+        'US': { name: 'United States', subs: [] }
+    };
+
+    function fillCountrySelect(sel) {
+        sel.innerHTML = '';
+        Object.keys(HOLIDAY_COUNTRIES).forEach(code => {
+            const o = document.createElement('option');
+            o.value = code; o.textContent = HOLIDAY_COUNTRIES[code].name;
+            sel.appendChild(o);
+        });
+    }
+
+    function fillSubdivSelect(sel, country, selected) {
+        sel.innerHTML = '';
+        const o0 = document.createElement('option');
+        o0.value = ''; o0.textContent = LOC === 'de' ? '— Landesweit —' : '— Nationwide —';
+        sel.appendChild(o0);
+        const subs = (HOLIDAY_COUNTRIES[country] || {}).subs || [];
+        subs.forEach(pair => {
+            const o = document.createElement('option');
+            o.value = pair[0]; o.textContent = pair[1];
+            sel.appendChild(o);
+        });
+        sel.value = selected || '';
+        sel.disabled = subs.length === 0;
+    }
+
+    function toggleHolidayUI() {
+        const isRecur = $('evtRecur').value !== 'none';
+        const skip = $('evtSkipHolidays').checked;
+        $('holidaySkipGroup').style.display = isRecur ? '' : 'none';
+        $('exceptionDatesGroup').style.display = isRecur ? '' : 'none';
+        $('holidayRegionGroup').style.display = (isRecur && skip) ? '' : 'none';
+    }
 
     const COLORS = [
         '#039be5','#3788d8','#33b679','#0b8043',
@@ -512,6 +592,7 @@ document.addEventListener('DOMContentLoaded', function() {
         customGroup.style.display = recType === 'custom' ? '' : 'none';
         endGroup.style.display = recType !== 'none' ? '' : 'none';
         if (recType === 'custom') updateCustomUnits();
+        toggleHolidayUI();
     }
 
     function toggleRecurEndDate() {
@@ -608,6 +689,11 @@ document.addEventListener('DOMContentLoaded', function() {
         $('recurEnd').style.display = 'none';
         $('evtCustomInterval').value = '1';
         $('evtCustomUnit').value = 'days';
+        $('evtSkipHolidays').checked = false;
+        $('evtHolidayCountry').value = 'DE';
+        fillSubdivSelect($('evtHolidaySubdiv'), 'DE', '');
+        $('evtExceptionDates').value = '';
+        toggleHolidayUI();
         $('btnDel').style.display = 'none';
         $('modal').style.display = 'flex';
         $('evtTitle').focus();
@@ -668,6 +754,13 @@ document.addEventListener('DOMContentLoaded', function() {
             $('recurEnd').value = '';
             $('recurEnd').style.display = 'none';
         }
+        // Holiday-skip / exception settings
+        $('evtSkipHolidays').checked = !!(+p.skip_holidays);
+        const editCountry = HOLIDAY_COUNTRIES[p.holiday_country] ? p.holiday_country : 'DE';
+        $('evtHolidayCountry').value = editCountry;
+        fillSubdivSelect($('evtHolidaySubdiv'), editCountry, p.holiday_subdivision || '');
+        $('evtExceptionDates').value = p.exception_dates || '';
+        toggleHolidayUI();
         $('btnDel').style.display = '';
         $('modal').style.display = 'flex';
         $('evtTitle').focus();
@@ -719,6 +812,10 @@ document.addEventListener('DOMContentLoaded', function() {
         } else {
             fd.append('recurrence_end', '');
         }
+        fd.append('skip_holidays', (recType !== 'none' && $('evtSkipHolidays').checked) ? 1 : 0);
+        fd.append('holiday_country', $('evtHolidayCountry').value || '');
+        fd.append('holiday_subdivision', $('evtHolidaySubdiv').value || '');
+        fd.append('exception_dates', $('evtExceptionDates').value || '');
         fd.append(TOKEN, 1);
 
         try {
@@ -750,6 +847,7 @@ document.addEventListener('DOMContentLoaded', function() {
     calendar = new FullCalendar.Calendar(calEl, {
         locale: LOC,
         initialView: '<?php echo $defaultView; ?>',
+        eventDisplay: '<?php echo $eventDisplayFc; ?>',
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
@@ -816,7 +914,14 @@ document.addEventListener('DOMContentLoaded', function() {
             fetch(BASE + 'moveEvent', {method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body:fd})
                 .then(r=>r.json()).then(d=>{ if(!d.success) info.revert(); }).catch(()=>info.revert());
         },
-        eventDidMount: function(info) { info.el.title = info.event.title; },
+        eventDidMount: function(info) {
+            info.el.title = info.event.title;
+            if (EVENT_STYLE === 'bar' && info.el.classList.contains('fc-daygrid-block-event')) {
+                const txt = pickTextColor(info.event.backgroundColor || DEFAULT_COLOR);
+                info.el.style.setProperty('--fc-event-text-color', txt);
+                info.el.style.color = txt;
+            }
+        },
         datesSet: function(info) { if (miniCal) miniCal.gotoDate(info.view.currentStart); }
     });
     calendar.render();
@@ -839,6 +944,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Events
     initCats();
+    fillCountrySelect($('evtHolidayCountry'));
+    fillSubdivSelect($('evtHolidaySubdiv'), 'DE', '');
 
     const btnCreate = $('btnCreate');
     if (btnCreate) btnCreate.addEventListener('click', () => openNew());
@@ -851,6 +958,8 @@ document.addEventListener('DOMContentLoaded', function() {
     $('evtEnd').addEventListener('change', function() { updateRecurrenceOptions(); if ($('evtRecur').value === 'custom') updateCustomUnits(); });
     $('evtRecur').addEventListener('change', toggleRecurrenceEnd);
     $('recurEndType').addEventListener('change', toggleRecurEndDate);
+    $('evtSkipHolidays').addEventListener('change', toggleHolidayUI);
+    $('evtHolidayCountry').addEventListener('change', function() { fillSubdivSelect($('evtHolidaySubdiv'), this.value, ''); });
     $('popClose').addEventListener('click', hidePopup);
     $('popEdit').addEventListener('click', () => { if (popEvt) openEdit(popEvt); });
     $('popDel').addEventListener('click', () => { if (popEvt) delEvt(popEvt.id); });

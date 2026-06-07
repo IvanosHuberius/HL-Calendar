@@ -30,7 +30,7 @@ function New-ZipWithForwardSlashes {
 
 # Clean old packages
 Remove-Item -Force "$base\packages\*.zip" -ErrorAction SilentlyContinue
-Remove-Item -Force "$base\pkg_jwcalendar_v1.7.2.zip" -ErrorAction SilentlyContinue
+Remove-Item -Force "$base\pkg_jwcalendar_v1.8.0.zip" -ErrorAction SilentlyContinue
 
 # Build com_calendar.zip
 Write-Host "Building com_calendar.zip..."
@@ -43,15 +43,15 @@ New-ZipWithForwardSlashes -SourceDir "$base\temp\mod_jwcalendar" -ZipPath "$base
 Write-Host "  OK"
 
 # Build pkg_jwcalendar.zip
-Write-Host "Building pkg_jwcalendar_v1.7.2.zip..."
-New-ZipWithForwardSlashes -SourceDir $base -ZipPath "$base\pkg_jwcalendar_v1.7.2.zip" -Include @('pkg_jwcalendar.xml','packages','language')
+Write-Host "Building pkg_jwcalendar_v1.8.0.zip..."
+New-ZipWithForwardSlashes -SourceDir $base -ZipPath "$base\pkg_jwcalendar_v1.8.0.zip" -Include @('pkg_jwcalendar.xml','packages','language')
 Write-Host "  OK"
 
 # Verify structure
 Write-Host "`nVerifying ZIP structure..."
-$zip = [System.IO.Compression.ZipFile]::OpenRead("$base\pkg_jwcalendar_v1.7.2.zip")
+$zip = [System.IO.Compression.ZipFile]::OpenRead("$base\pkg_jwcalendar_v1.8.0.zip")
 $zip.Entries | ForEach-Object { Write-Host "  $($_.FullName)" }
 $zip.Dispose()
 
-$fi = Get-Item "$base\pkg_jwcalendar_v1.7.2.zip"
+$fi = Get-Item "$base\pkg_jwcalendar_v1.8.0.zip"
 Write-Host "`nDONE: $($fi.Name) ($([math]::Round($fi.Length/1024, 1)) KB)"

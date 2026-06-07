@@ -442,6 +442,27 @@
     margin: 0 6px 0 0 !important;
 }
 
+/* Event display style (dot size / bar) - v1.8.0 */
+.jw-evtstyle-dot_small  { --fc-daygrid-event-dot-width: 8px; }
+.jw-evtstyle-dot_medium { --fc-daygrid-event-dot-width: 12px; }
+.jw-evtstyle-dot_large  { --fc-daygrid-event-dot-width: 18px; }
+
+/* Bigger dots get a touch more breathing room */
+.jw-evtstyle-dot_large .fc-daygrid-dot-event .fc-daygrid-event-dot,
+.jw-evtstyle-dot_medium .fc-daygrid-dot-event .fc-daygrid-event-dot {
+    margin: 0 7px 0 1px !important;
+}
+
+/* Bar style: filled coloured block in month view */
+.jw-evtstyle-bar .fc-daygrid-block-event {
+    border-radius: 4px !important;
+    padding: 1px 6px !important;
+}
+.jw-evtstyle-bar .fc-daygrid-block-event .fc-event-title,
+.jw-evtstyle-bar .fc-daygrid-block-event .fc-event-time {
+    font-weight: 600;
+}
+
 .jw-calendar-main .fc-timegrid-event {
     border-radius: 4px !important;
     padding: 2px 6px !important;
