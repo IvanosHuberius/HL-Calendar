@@ -3,7 +3,7 @@
 ## Projekt-Kurzinfo
 - **Name:** HL Kalender (JW Calendar)
 - **Typ:** Joomla 6 Package (`pkg_jwcalendar`) mit Komponente + Modul
-- **Version:** 1.8.0 (in Vorbereitung; Vorgänger 1.7.2 Final)
+- **Version:** 1.8.0 (live & ausgeliefert; Vorgänger 1.7.2)
 - **JED:** https://extensions.joomla.org/extension/calendars-a-events/hl-calendar/
 - **Autor:** huberlabs.ch (support@huberlabs.ch)
 - **Lizenz:** GPLv2+
@@ -86,7 +86,7 @@ powershell -File build.ps1
 powershell -File verify.ps1
 ```
 
-Der Build erstellt drei ZIPs: `com_calendar.zip`, `mod_jwcalendar.zip` und `pkg_jwcalendar_v1.7.2.zip`.
+Der Build erstellt drei ZIPs: `com_calendar.zip`, `mod_jwcalendar.zip` und `pkg_jwcalendar_v<version>.zip` (aktuell `_v1.8.0.zip`).
 
 ## Wichtige Regeln
 
@@ -96,6 +96,13 @@ Der Build erstellt drei ZIPs: `com_calendar.zip`, `mod_jwcalendar.zip` und `pkg_
 4. **CSS Custom Properties:** Farben werden als `--jw-primary` etc. in einem `<style>`-Block injiziert
 5. **Modul liest Komponenten-Config:** via `ComponentHelper::getParams('com_calendar')`
 6. **FullCalendar via CDN:** Nicht lokal einbetten, wird von jsdelivr geladen
+
+## Update-Server / Auto-Update
+
+- **Pflicht in der Update-XML:** `<client>site</client>` im `<update>`-Block! Ohne `<client>` nimmt Joomla `client_id=1` (administrator) an; das Paket `pkg_jwcalendar` hat aber `client_id=0` (site) → keine Zuordnung → Update wird mit `extension_id=0` gespeichert und in der Update-Liste **ausgeblendet** ("keine Updates" trotz gültiger, erreichbarer XML).
+- Update-XML liegt unter `update_server/jwcalendar_update.xml` (GitHub-Raw = produktive Quelle; bei Versionswechsel `<version>` + Download-URL anpassen).
+- Download = GitHub-Release-Asset `pkg_jwcalendar_v<version>.zip`. Übergang für Alt-Installs: XML zusätzlich auf eiwtestzone `updates/` hochladen.
+- Debug bei "kein Update sichtbar": DB prüfen – `#__updates` (extension_id/client_id), `#__update_sites` (enabled/last_check_timestamp), `#__update_sites_extensions`. Update-View filtert `extension_id <> 0`.
 
 ## Lessons Learned
 
