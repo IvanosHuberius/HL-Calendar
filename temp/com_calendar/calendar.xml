@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="component" method="upgrade">
+    <name>COM_CALENDAR</name>
+    <author>huberlabs.ch</author>
+    <creationDate>2026-03-25</creationDate>
+    <copyright>(C) 2026 huberlabs.ch</copyright>
+    <license>GNU General Public License version 2 or later</license>
+    <authorEmail>support@huberlabs.ch</authorEmail>
+    <authorUrl>https://www.eiwtestzone.ch/huberlabs-extensions/</authorUrl>
+    <version>1.7.2</version>
+    <description>COM_CALENDAR_DESC</description>
+    <namespace path="src">Jewe\Component\Calendar</namespace>
+
+    <install>
+        <sql>
+            <file driver="mysql" charset="utf8">sql/install.mysql.sql</file>
+        </sql>
+    </install>
+    <uninstall>
+        <sql>
+            <file driver="mysql" charset="utf8">sql/uninstall.mysql.sql</file>
+        </sql>
+    </uninstall>
+
+    <files folder="site">
+        <folder>services</folder>
+        <folder>src</folder>
+        <folder>tmpl</folder>
+    </files>
+
+    <languages folder="site">
+        <language tag="en-GB">language/en-GB/com_calendar.ini</language>
+        <language tag="de-DE">language/de-DE/com_calendar.ini</language>
+    </languages>
+
+    <media destination="com_calendar" folder="media">
+        <folder>css</folder>
+        <folder>js</folder>
+    </media>
+
+    <administration>
+        <files folder="administrator">
+            <filename>config.xml</filename>
+            <folder>forms</folder>
+            <folder>services</folder>
+            <folder>sql</folder>
+            <folder>src</folder>
+            <folder>tmpl</folder>
+        </files>
+        <languages folder="administrator">
+            <language tag="en-GB">language/en-GB/com_calendar.ini</language>
+            <language tag="en-GB">language/en-GB/com_calendar.sys.ini</language>
+            <language tag="de-DE">language/de-DE/com_calendar.ini</language>
+            <language tag="de-DE">language/de-DE/com_calendar.sys.ini</language>
+        </languages>
+        <menu>COM_CALENDAR</menu>
+        <submenu>
+            <menu link="option=com_calendar&amp;view=events">COM_CALENDAR_EVENTS</menu>
+            <menu link="option=com_calendar&amp;view=categories">COM_CALENDAR_CATEGORIES</menu>
+        </submenu>
+    </administration>
+    <updateservers>
+        <server type="extension" name="HL Calendar Updates">https://www.eiwtestzone.ch/huberlabs-extensions/updates/jwcalendar_update.xml</server>
+    </updateservers>
+</extension>

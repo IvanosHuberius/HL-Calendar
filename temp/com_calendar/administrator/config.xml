@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8"?>
+<config>
+    <fieldset name="calendar_appearance" label="COM_CALENDAR_CONFIG_APPEARANCE" description="COM_CALENDAR_CONFIG_APPEARANCE_DESC">
+
+        <field
+            name="primary_color"
+            type="color"
+            control="hue"
+            label="COM_CALENDAR_CONFIG_PRIMARY_COLOR"
+            description="COM_CALENDAR_CONFIG_PRIMARY_COLOR_DESC"
+            default="#1a73e8"
+        />
+
+        <field
+            name="primary_hover_color"
+            type="color"
+            control="hue"
+            label="COM_CALENDAR_CONFIG_PRIMARY_HOVER"
+            description="COM_CALENDAR_CONFIG_PRIMARY_HOVER_DESC"
+            default="#1765cc"
+        />
+
+        <field
+            name="today_highlight_color"
+            type="color"
+            control="hue"
+            label="COM_CALENDAR_CONFIG_TODAY_COLOR"
+            description="COM_CALENDAR_CONFIG_TODAY_COLOR_DESC"
+            default="#fff8e1"
+        />
+
+        <field
+            name="background_color"
+            type="color"
+            control="hue"
+            label="COM_CALENDAR_CONFIG_BG_COLOR"
+            description="COM_CALENDAR_CONFIG_BG_COLOR_DESC"
+            default="#ffffff"
+        />
+
+        <field
+            name="text_color"
+            type="color"
+            control="hue"
+            label="COM_CALENDAR_CONFIG_TEXT_COLOR"
+            description="COM_CALENDAR_CONFIG_TEXT_COLOR_DESC"
+            default="#3c4043"
+        />
+
+        <field
+            name="text_light_color"
+            type="color"
+            control="hue"
+            label="COM_CALENDAR_CONFIG_TEXT_LIGHT"
+            description="COM_CALENDAR_CONFIG_TEXT_LIGHT_DESC"
+            default="#70757a"
+        />
+
+        <field
+            name="border_color"
+            type="color"
+            control="hue"
+            label="COM_CALENDAR_CONFIG_BORDER_COLOR"
+            description="COM_CALENDAR_CONFIG_BORDER_COLOR_DESC"
+            default="#dadce0"
+        />
+
+        <field
+            name="hover_bg_color"
+            type="color"
+            control="hue"
+            label="COM_CALENDAR_CONFIG_HOVER_BG"
+            description="COM_CALENDAR_CONFIG_HOVER_BG_DESC"
+            default="#f1f3f4"
+        />
+
+        <field
+            name="sidebar_bg_color"
+            type="color"
+            control="hue"
+            label="COM_CALENDAR_CONFIG_SIDEBAR_BG"
+            description="COM_CALENDAR_CONFIG_SIDEBAR_BG_DESC"
+            default="#ffffff"
+        />
+
+    </fieldset>
+
+    <fieldset name="calendar_defaults" label="COM_CALENDAR_CONFIG_DEFAULTS" description="COM_CALENDAR_CONFIG_DEFAULTS_DESC">
+
+        <field
+            name="default_view"
+            type="list"
+            label="COM_CALENDAR_CONFIG_DEFAULT_VIEW"
+            default="dayGridMonth"
+        >
+            <option value="dayGridMonth">COM_CALENDAR_VIEW_MONTH</option>
+            <option value="timeGridWeek">COM_CALENDAR_VIEW_WEEK</option>
+            <option value="timeGridDay">COM_CALENDAR_VIEW_DAY</option>
+            <option value="listWeek">COM_CALENDAR_VIEW_LIST</option>
+        </field>
+
+        <field
+            name="first_day"
+            type="list"
+            label="COM_CALENDAR_CONFIG_FIRST_DAY"
+            default="1"
+        >
+            <option value="0">COM_CALENDAR_SUNDAY</option>
+            <option value="1">COM_CALENDAR_MONDAY</option>
+        </field>
+
+        <field
+            name="show_week_numbers"
+            type="list"
+            label="COM_CALENDAR_CONFIG_WEEK_NUMBERS"
+            default="1"
+        >
+            <option value="0">JNO</option>
+            <option value="1">JYES</option>
+        </field>
+
+        <field
+            name="show_sidebar"
+            type="list"
+            label="COM_CALENDAR_CONFIG_SHOW_SIDEBAR"
+            default="1"
+        >
+            <option value="0">JNO</option>
+            <option value="1">JYES</option>
+        </field>
+
+        <field
+            name="business_hours_start"
+            type="text"
+            label="COM_CALENDAR_CONFIG_BH_START"
+            default="08:00"
+        />
+
+        <field
+            name="business_hours_end"
+            type="text"
+            label="COM_CALENDAR_CONFIG_BH_END"
+            default="18:00"
+        />
+
+        <field
+            name="default_event_color"
+            type="color"
+            control="hue"
+            label="COM_CALENDAR_CONFIG_DEFAULT_EVENT_COLOR"
+            default="#3788d8"
+        />
+
+    </fieldset>
+
+    <fieldset name="permissions" label="JCONFIG_PERMISSIONS_LABEL" description="JCONFIG_PERMISSIONS_DESC">
+        <field
+            name="rules"
+            type="rules"
+            label="JCONFIG_PERMISSIONS_LABEL"
+            filter="rules"
+            component="com_calendar"
+            section="component"
+        />
+    </fieldset>
+</config>

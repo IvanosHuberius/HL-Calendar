@@ -1,0 +1,21 @@
+# OS / Editor junk
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+desktop.ini
+.DS_Store
+*~
+*.swp
+
+# OneDrive temp
+~$*
+
+# Python build cache (docs/)
+__pycache__/
+*.pyc
+
+# Logs
+*.log
+
+# Claude Code local settings (machine-specific)
+.claude/settings.local.json

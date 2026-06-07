@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="package" method="upgrade">
+    <name>PKG_JWCALENDAR</name>
+    <packagename>jwcalendar</packagename>
+    <version>1.7.2</version>
+    <creationDate>2026-03-25</creationDate>
+    <author>huberlabs.ch</author>
+    <authorEmail>support@huberlabs.ch</authorEmail>
+    <authorUrl>https://www.eiwtestzone.ch/huberlabs-extensions/</authorUrl>
+    <copyright>(C) 2026 huberlabs.ch</copyright>
+    <license>GNU General Public License version 2 or later</license>
+    <description>HL Kalender - Ein Google Calendar-ähnlicher Kalender für Joomla 6 mit Frontend-Bearbeitung, Drag &amp; Drop, Farbkategorien und Wiederholungsterminen.</description>
+    <files folder="packages">
+        <file type="component" id="com_calendar">com_calendar.zip</file>
+        <file type="module" id="mod_jwcalendar" client="site">mod_jwcalendar.zip</file>
+    </files>
+    <languages>
+        <language tag="de-DE">language/de-DE/pkg_jwcalendar.ini</language>
+        <language tag="en-GB">language/en-GB/pkg_jwcalendar.ini</language>
+    </languages>
+    <updateservers>
+        <server type="extension" name="HL Calendar Updates">https://www.eiwtestzone.ch/huberlabs-extensions/updates/jwcalendar_update.xml</server>
+    </updateservers>
+</extension>
