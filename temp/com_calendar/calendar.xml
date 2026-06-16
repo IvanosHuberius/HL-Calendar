@@ -7,7 +7,7 @@
     <license>GNU General Public License version 2 or later</license>
     <authorEmail>support@huberlabs.ch</authorEmail>
     <authorUrl>https://www.eiwtestzone.ch/huberlabs-extensions/</authorUrl>
-    <version>1.8.0</version>
+    <version>1.8.1</version>
     <description>COM_CALENDAR_DESC</description>
     <namespace path="src">Jewe\Component\Calendar</namespace>
 
@@ -36,6 +36,13 @@
     <languages folder="site">
         <language tag="en-GB">language/en-GB/com_calendar.ini</language>
         <language tag="de-DE">language/de-DE/com_calendar.ini</language>
+        <language tag="ka-GE">language/ka-GE/com_calendar.ini</language>
+        <language tag="it-IT">language/it-IT/com_calendar.ini</language>
+        <language tag="es-ES">language/es-ES/com_calendar.ini</language>
+        <language tag="fr-FR">language/fr-FR/com_calendar.ini</language>
+        <language tag="pt-PT">language/pt-PT/com_calendar.ini</language>
+        <language tag="ru-RU">language/ru-RU/com_calendar.ini</language>
+        <language tag="ar-AA">language/ar-AA/com_calendar.ini</language>
     </languages>
 
     <media destination="com_calendar" folder="media">

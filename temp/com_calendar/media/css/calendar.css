@@ -463,6 +463,16 @@
     font-weight: 600;
 }
 
+/* RTL support (Arabic, Hebrew, …) - v1.8.1 */
+[dir="rtl"] .jw-calendar-main .fc-daygrid-dot-event .fc-daygrid-event-dot {
+    margin: 0 0 0 6px !important;
+}
+[dir="rtl"] .jw-category-label .jw-category-color,
+[dir="rtl"] .jw-category-color {
+    margin-left: 8px;
+    margin-right: 0;
+}
+
 .jw-calendar-main .fc-timegrid-event {
     border-radius: 4px !important;
     padding: 2px 6px !important;

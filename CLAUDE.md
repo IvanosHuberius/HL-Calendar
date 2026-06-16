@@ -3,7 +3,7 @@
 ## Projekt-Kurzinfo
 - **Name:** HL Kalender (JW Calendar)
 - **Typ:** Joomla 6 Package (`pkg_jwcalendar`) mit Komponente + Modul
-- **Version:** 1.8.0 (live & ausgeliefert; Vorgänger 1.7.2)
+- **Version:** 1.8.1 (Lokalisierung – Komplett-Sprachunterstützung; Vorgänger 1.8.0)
 - **JED:** https://extensions.joomla.org/extension/calendars-a-events/hl-calendar/
 - **Autor:** huberlabs.ch (support@huberlabs.ch)
 - **Lizenz:** GPLv2+
@@ -12,7 +12,7 @@
 - **Frontend:** FullCalendar.js 6.1.11 (via CDN jsdelivr)
 - **Backend:** PHP 8.1+, MySQL, Joomla 6 MVC
 - **Namespace:** `Jewe\Component\Calendar` (Komponente), `Jewe\Module\JwCalendar` (Modul)
-- **Sprachen:** Deutsch (de-DE), Englisch (en-GB)
+- **Sprachen:** de-DE, en-GB, ka-GE, it-IT, es-ES, fr-FR, pt-PT, ar-AA, ru-RU (Englisch = Fallback). Ab 1.8.1.
 - **Plattform:** Joomla 5 & 6
 
 ## Ordnerstruktur
@@ -103,6 +103,13 @@ Der Build erstellt drei ZIPs: `com_calendar.zip`, `mod_jwcalendar.zip` und `pkg_
 - Update-XML liegt unter `update_server/jwcalendar_update.xml` (GitHub-Raw = produktive Quelle; bei Versionswechsel `<version>` + Download-URL anpassen).
 - Download = GitHub-Release-Asset `pkg_jwcalendar_v<version>.zip`. Übergang für Alt-Installs: XML zusätzlich auf eiwtestzone `updates/` hochladen.
 - Debug bei "kein Update sichtbar": DB prüfen – `#__updates` (extension_id/client_id), `#__update_sites` (enabled/last_check_timestamp), `#__update_sites_extensions`. Update-View filtert `extension_id <> 0`.
+
+## Lokalisierung (ab 1.8.1)
+
+- **FullCalendar holt Monats-/Wochentagsnamen aus dem nativen `Intl` des BROWSERS**, NICHT aus seiner Locale-Datei (die liefert nur Buttons/Wocheneinstellungen). Kennt der Browser die Seitensprache nicht (z.B. Georgisch: `Intl.supportedLocalesOf(['ka'])` = `[]`), fällt er auf die **Browsersprache** zurück → falsche Sprache.
+- **Lösung (browserunabhängig):** Monats-/Wochentagsnamen serverseitig aus Joomla holen (`Text::_('JUNE')`, `Text::_('MONDAY')`, `Text::_('MON')` … Standard-Joomla-Datumskonstanten) → als `CAL_NAMES` ins JS → per `dayHeaderContent` (Wochentage) + Titel-Override in `datesSet` (Monat) rendern. In `default.php` von Komponente + Modul (Haupt- + Mini-Kalender).
+- `locales-all`-CDN für FullCalendar: `https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.11/locales-all.global.min.js` (registriert `globalLocales`; liefert lokalisierte Button-Texte/RTL). NICHT `fullcalendar@.../locales-all` (404).
+- Dialog-/JS-Texte als `Text::_()`-Schlüssel im `L`-Objekt; Sprachdateien unter `site/language/<lang>/` (Komponente) und `language/<lang>/` (Modul). RTL via `$lang->isRtl()` → `dir="rtl"` am Wrapper.
 
 ## Lessons Learned
 

@@ -4,11 +4,11 @@
 
 | Feld | Wert |
 |------|------|
-| **Version** | 1.8.0 (ausgeliefert & getestet) ✅ |
-| **Vorgänger** | 1.7.2 (Final, JED-Live seit 2026-04-04) |
-| **Status** | Live – Auto-Update funktioniert, auf Joomla 6.1.1 verifiziert |
+| **Version** | 1.8.1 (Lokalisierung – Code fertig & live getestet auf Georgisch) ✅ |
+| **Vorgänger** | 1.8.0 (live), 1.7.2 (JED seit 2026-04-04) |
+| **Status** | Lokalisierung verifiziert (eiwtestzone, Georgisch). Release (GitHub v1.8.1 + XML) offen |
 | **Offene Bugs** | Keine bekannt |
-| **Letzte Aktualisierung** | 2026-06-07 |
+| **Letzte Aktualisierung** | 2026-06-16 |
 | **Update-Server** | GitHub (raw) + eiwtestzone (Übergang für 1.7.2-Nutzer) |
 | **Download** | GitHub-Release v1.8.0 (`pkg_jwcalendar_v1.8.0.zip`) |
 
@@ -28,6 +28,12 @@
 - Update-Server für automatische Updates
 
 ## Changelog
+
+### v1.8.1 (2026-06-16) – Lokalisierung ✅ getestet (Release offen)
+- **Vollständige Sprachunterstützung:** Kalender (Monat, Wochentage, Buttons, Titel) folgt jetzt der **Joomla-Seitensprache** – **browserunabhängig**
+- Root-Cause-Fix: FullCalendar holt Datumsnamen aus Browser-`Intl`; bei nicht unterstützter Sprache (z.B. Georgisch) fiel es auf die Browsersprache zurück. Jetzt werden Monats-/Wochentagsnamen aus Joomla (`Text::_`) gefüttert (`dayHeaderContent` + Titel-Override)
+- FullCalendar-Sprachpaket (`locales-all`) geladen → lokalisierte Buttons + RTL (Arabisch/Hebräisch via `dir="rtl"`)
+- Dialog-/Wiederholungs-/Feiertags-Texte als Sprachschlüssel; neue Sprachdateien: **ka-GE, it-IT, es-ES, fr-FR, pt-PT, ar-AA, ru-RU** (Englisch-Fallback)
 
 ### v1.8.0 (2026-06-07) – Feature-Release ✅ ausgeliefert
 - **Termin-Darstellung wählbar:** Backend-Einstellung „Termin-Darstellung (Monatsansicht)" – Punkt klein/mittel/groß oder farbiger Balken mit automatischem Text-Kontrast

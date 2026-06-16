@@ -18,6 +18,7 @@ use Joomla\CMS\Component\ComponentHelper;
 $wa = Factory::getApplication()->getDocument()->getWebAssetManager();
 $wa->registerAndUseStyle('com_calendar.fullcalendar', 'https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css');
 $wa->registerAndUseScript('com_calendar.fullcalendar', 'https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js', [], ['defer' => false]);
+$wa->registerAndUseScript('com_calendar.fclocales', 'https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.11/locales-all.global.min.js', [], ['defer' => false], ['com_calendar.fullcalendar']);
 $wa->registerAndUseStyle('com_calendar.style', 'media/com_calendar/css/calendar.css');
 
 $baseUrl = Uri::root() . 'index.php?option=com_calendar&task=api.';
@@ -27,6 +28,8 @@ $canEdit = $this->canEdit;
 $categories = json_encode($this->categories);
 $locale = Factory::getApplication()->getLanguage()->getTag();
 $localeShort = substr($locale, 0, 2);
+$fcLocale = strtolower($locale); // full BCP47 tag for FullCalendar (e.g. ka-ge → falls back to ka)
+$isRtl = Factory::getApplication()->getLanguage()->isRtl();
 $isSuperUser = $user->authorise('core.admin');
 
 // Load component params for colors and defaults
@@ -73,7 +76,7 @@ $primaryLight = sprintf('#%02x%02x%02x', min(255, $pr + round((255 - $pr) * 0.85
     #jw-calendar-app .fc-day-today { background: <?php echo $todayHighlight; ?> !important; }
 </style>
 
-<div id="jw-calendar-app" class="jw-calendar-wrapper jw-evtstyle-<?php echo $eventStyle; ?>">
+<div id="jw-calendar-app" class="jw-calendar-wrapper jw-evtstyle-<?php echo $eventStyle; ?>"<?php echo $isRtl ? ' dir="rtl"' : ''; ?>>
     <?php if ($showSidebar) : ?>
     <!-- Sidebar -->
     <div class="jw-calendar-sidebar" id="calSidebar">
@@ -152,24 +155,24 @@ $primaryLight = sprintf('#%02x%02x%02x', min(255, $pr + round((255 - $pr) * 0.85
             </div>
 
             <div class="jw-form-group" id="customIntervalGroup" style="display:none">
-                <label for="eventCustomInterval"><?php echo $localeShort === 'de' ? 'Alle' : 'Every'; ?></label>
+                <label for="eventCustomInterval"><?php echo Text::_('COM_CALENDAR_RECUR_EVERY'); ?></label>
                 <div class="jw-form-row">
                     <input type="number" id="eventCustomInterval" class="jw-input jw-form-half" min="1" max="30" value="1" style="width:70px">
                     <select id="eventCustomUnit" class="jw-input jw-form-half">
-                        <option value="days"><?php echo $localeShort === 'de' ? 'Tage' : 'days'; ?></option>
-                        <option value="weeks"><?php echo $localeShort === 'de' ? 'Wochen' : 'weeks'; ?></option>
-                        <option value="months"><?php echo $localeShort === 'de' ? 'Monate' : 'months'; ?></option>
-                        <option value="years"><?php echo $localeShort === 'de' ? 'Jahre' : 'years'; ?></option>
+                        <option value="days"><?php echo Text::_('COM_CALENDAR_UNIT_DAYS'); ?></option>
+                        <option value="weeks"><?php echo Text::_('COM_CALENDAR_UNIT_WEEKS'); ?></option>
+                        <option value="months"><?php echo Text::_('COM_CALENDAR_UNIT_MONTHS'); ?></option>
+                        <option value="years"><?php echo Text::_('COM_CALENDAR_UNIT_YEARS'); ?></option>
                     </select>
                 </div>
             </div>
 
             <div class="jw-form-group" id="recurrenceEndGroup" style="display:none">
-                <label><?php echo $localeShort === 'de' ? 'Endet' : 'Ends'; ?></label>
+                <label><?php echo Text::_('COM_CALENDAR_RECUR_ENDS'); ?></label>
                 <div class="jw-form-row">
                     <select id="eventRecurrenceEndType" class="jw-input" style="width:auto">
-                        <option value="never"><?php echo $localeShort === 'de' ? 'Nie' : 'Never'; ?></option>
-                        <option value="on"><?php echo $localeShort === 'de' ? 'Am' : 'On'; ?></option>
+                        <option value="never"><?php echo Text::_('COM_CALENDAR_RECUR_NEVER'); ?></option>
+                        <option value="on"><?php echo Text::_('COM_CALENDAR_RECUR_ON'); ?></option>
                     </select>
                     <input type="date" id="eventRecurrenceEnd" class="jw-input" style="display:none">
                 </div>
@@ -178,7 +181,7 @@ $primaryLight = sprintf('#%02x%02x%02x', min(255, $pr + round((255 - $pr) * 0.85
             <div class="jw-form-group" id="holidaySkipGroup" style="display:none">
                 <label class="jw-checkbox-label">
                     <input type="checkbox" id="eventSkipHolidays">
-                    <span><?php echo $localeShort === 'de' ? 'An gesetzlichen Feiertagen aussetzen' : 'Skip on public holidays'; ?></span>
+                    <span><?php echo Text::_('COM_CALENDAR_SKIP_HOLIDAYS'); ?></span>
                 </label>
             </div>
 
@@ -190,7 +193,7 @@ $primaryLight = sprintf('#%02x%02x%02x', min(255, $pr + round((255 - $pr) * 0.85
             </div>
 
             <div class="jw-form-group" id="exceptionDatesGroup" style="display:none">
-                <label for="eventExceptionDates"><?php echo $localeShort === 'de' ? 'Ausnahme-Daten (manuell, JJJJ-MM-TT)' : 'Exception dates (manual, YYYY-MM-DD)'; ?></label>
+                <label for="eventExceptionDates"><?php echo Text::_('COM_CALENDAR_EXCEPTION_DATES_LABEL'); ?></label>
                 <input type="text" id="eventExceptionDates" class="jw-input" placeholder="2026-12-25, 2026-12-26">
             </div>
 
@@ -282,6 +285,65 @@ document.addEventListener('DOMContentLoaded', function() {
     const LOCALE = '<?php echo $localeShort; ?>';
     const DEFAULT_COLOR = '<?php echo $defaultEvtColor; ?>';
     const EVENT_STYLE = '<?php echo $eventStyle; ?>';
+    const LOCALE_INTL = '<?php echo $locale; ?>';
+
+    // Localized UI strings (from Joomla language files; English fallback for untranslated languages)
+    const L = <?php echo json_encode([
+        'nationwide'     => Text::_('COM_CALENDAR_NATIONWIDE'),
+        'recurNone'      => Text::_('COM_CALENDAR_RECUR_NONE_OPT'),
+        'daily'          => Text::_('COM_CALENDAR_RECURRENCE_DAILY'),
+        'weeklyOn'       => Text::_('COM_CALENDAR_RECUR_WEEKLY_ON'),
+        'monthlyOn'      => Text::_('COM_CALENDAR_RECUR_MONTHLY_ON'),
+        'yearlyOn'       => Text::_('COM_CALENDAR_RECUR_YEARLY_ON'),
+        'custom'         => Text::_('COM_CALENDAR_RECUR_CUSTOM'),
+        'ord1'           => Text::_('COM_CALENDAR_ORDINAL_1'),
+        'ord2'           => Text::_('COM_CALENDAR_ORDINAL_2'),
+        'ord3'           => Text::_('COM_CALENDAR_ORDINAL_3'),
+        'ord4'           => Text::_('COM_CALENDAR_ORDINAL_4'),
+        'ordLast'        => Text::_('COM_CALENDAR_ORDINAL_LAST'),
+        'unitDays'       => Text::_('COM_CALENDAR_UNIT_DAYS'),
+        'selectCategory' => Text::_('COM_CALENDAR_SELECT_CATEGORY'),
+        'startMissing'   => Text::_('COM_CALENDAR_START_DATE_MISSING'),
+        'endMissing'     => Text::_('COM_CALENDAR_END_DATE_MISSING'),
+        'serverError'    => Text::_('COM_CALENDAR_SERVER_ERROR'),
+        'deleteCatConfirm' => Text::_('COM_CALENDAR_DELETE_CATEGORY_CONFIRM'),
+    ], JSON_UNESCAPED_UNICODE); ?>;
+
+    // Localized month & weekday names from Joomla (site language) — browser-INDEPENDENT.
+    // FullCalendar otherwise pulls names from the browser's native Intl, which may lack the
+    // site language (e.g. Georgian) and then falls back to the viewer's browser language.
+    const CAL_NAMES = <?php echo json_encode([
+        'months'      => array_map(fn($k) => Text::_($k), ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER']),
+        'monthsShort' => array_map(fn($k) => Text::_($k), ['JANUARY_SHORT','FEBRUARY_SHORT','MARCH_SHORT','APRIL_SHORT','MAY_SHORT','JUNE_SHORT','JULY_SHORT','AUGUST_SHORT','SEPTEMBER_SHORT','OCTOBER_SHORT','NOVEMBER_SHORT','DECEMBER_SHORT']),
+        'days'        => array_map(fn($k) => Text::_($k), ['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY']),
+        'daysShort'   => array_map(fn($k) => Text::_($k), ['SUN','MON','TUE','WED','THU','FRI','SAT']),
+    ], JSON_UNESCAPED_UNICODE); ?>;
+
+    // Render FullCalendar day-headers in the site language (instead of browser Intl)
+    function fcDayHeader(arg) {
+        const wd = CAL_NAMES.daysShort[arg.date.getDay()];
+        return (arg.view.type.indexOf('timeGrid') === 0) ? (wd + ' ' + arg.date.getDate()) : wd;
+    }
+    function fcDayHeaderNarrow(arg) {
+        return (CAL_NAMES.daysShort[arg.date.getDay()] || '').charAt(0);
+    }
+    // Rewrite the toolbar title in the site language
+    function fcFixTitle(rootEl, view) {
+        const t = rootEl.querySelector('.fc-toolbar-title');
+        if (!t) return;
+        const s = view.currentStart;
+        if (view.type === 'dayGridMonth' || view.type === 'listMonth') {
+            t.textContent = CAL_NAMES.months[s.getMonth()] + ' ' + s.getFullYear();
+        } else if (view.type === 'timeGridDay') {
+            t.textContent = CAL_NAMES.days[s.getDay()] + ', ' + s.getDate() + '. ' + CAL_NAMES.months[s.getMonth()] + ' ' + s.getFullYear();
+        } else if (view.type === 'timeGridWeek') {
+            const e = new Date(view.currentEnd.getTime() - 86400000);
+            t.textContent = s.getDate() + '. ' + CAL_NAMES.monthsShort[s.getMonth()] + ' – ' + e.getDate() + '. ' + CAL_NAMES.monthsShort[e.getMonth()] + ' ' + e.getFullYear();
+        }
+    }
+
+    // sprintf-lite: replace each %s with the next argument
+    function fmt(s) { let i = 1; const a = arguments; return String(s).replace(/%s/g, () => a[i++]); }
 
     // Pick a readable text color (black/white) for a given background hex
     function pickTextColor(hex) {
@@ -321,7 +383,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function fillSubdivSelect(sel, country, selected) {
         sel.innerHTML = '';
         const o0 = document.createElement('option');
-        o0.value = ''; o0.textContent = LOCALE === 'de' ? '— Landesweit —' : '— Nationwide —';
+        o0.value = ''; o0.textContent = L.nationwide;
         sel.appendChild(o0);
         const subs = (HOLIDAY_COUNTRIES[country] || {}).subs || [];
         subs.forEach(pair => {
@@ -466,7 +528,7 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     window.deleteCategory = function(id, title) {
-        if (!confirm('Kategorie "' + title + '" wirklich löschen? Events werden keiner Kategorie mehr zugeordnet.')) return;
+        if (!confirm(L.deleteCatConfirm)) return;
         const params = new URLSearchParams({ id: id });
         params.append(TOKEN_NAME, '1');
         fetch(BASE_URL + 'deleteCategory', { method: 'POST', headers: {'Content-Type': 'application/x-www-form-urlencoded'}, body: params })
@@ -551,7 +613,7 @@ document.addEventListener('DOMContentLoaded', function() {
         } else if (!daysOpt) {
             const opt = document.createElement('option');
             opt.value = 'days';
-            opt.textContent = LOCALE === 'de' ? 'Tage' : 'days';
+            opt.textContent = L.unitDays;
             unit.insertBefore(opt, unit.firstChild);
         }
     }
@@ -564,29 +626,28 @@ document.addEventListener('DOMContentLoaded', function() {
         const sel = document.getElementById('eventRecurrence');
         const currentVal = sel.value;
         const dt = new Date(startVal);
-        const loc = LOCALE === 'de' ? 'de-DE' : 'en-GB';
+        const loc = LOCALE_INTL;
         const dayName = dt.toLocaleDateString(loc, {weekday: 'long'});
         const monthDay = dt.getDate();
-        const monthName = dt.toLocaleDateString(loc, {month: 'long'});
+        const yearlyDate = dt.toLocaleDateString(loc, {day: 'numeric', month: 'long'});
         const weekOfMonth = Math.ceil(monthDay / 7);
         const lastDay = new Date(dt.getFullYear(), dt.getMonth() + 1, 0).getDate();
         const isLast = (monthDay + 7) > lastDay;
         const ordIdx = isLast ? 4 : weekOfMonth - 1;
-        const ordinals_de = ['ersten', 'zweiten', 'dritten', 'vierten', 'letzten'];
-        const ordinals_en = ['first', 'second', 'third', 'fourth', 'last'];
-        const ordinal = LOCALE === 'de' ? ordinals_de[ordIdx] : ordinals_en[ordIdx];
+        const ordinals = [L.ord1, L.ord2, L.ord3, L.ord4, L.ordLast];
+        const ordinal = ordinals[ordIdx];
 
         const options = [
-            {value:'none', text: LOCALE==='de' ? 'Wird nicht wiederholt' : 'Does not repeat'},
+            {value:'none', text: L.recurNone},
         ];
         if (!isMultiDay) {
-            options.push({value:'daily', text: LOCALE==='de' ? 'Täglich' : 'Daily'});
+            options.push({value:'daily', text: L.daily});
         }
         options.push(
-            {value:'weekly', text: LOCALE==='de' ? 'Wöchentlich am '+dayName : 'Weekly on '+dayName},
-            {value:'monthly', text: LOCALE==='de' ? 'Monatlich am '+ordinal+' '+dayName : 'Monthly on the '+ordinal+' '+dayName},
-            {value:'yearly', text: LOCALE==='de' ? 'Jährlich am '+monthDay+'. '+monthName : 'Yearly on '+monthName+' '+monthDay},
-            {value:'custom', text: LOCALE==='de' ? 'Benutzerdefiniert...' : 'Custom...'},
+            {value:'weekly', text: fmt(L.weeklyOn, dayName)},
+            {value:'monthly', text: fmt(L.monthlyOn, ordinal, dayName)},
+            {value:'yearly', text: fmt(L.yearlyOn, yearlyDate)},
+            {value:'custom', text: L.custom},
         );
 
         sel.innerHTML = '';
@@ -784,12 +845,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const allDay = document.getElementById('eventAllDay').checked;
         const recType = document.getElementById('eventRecurrence').value;
 
-        if (!startVal) { alert('Start-Datum fehlt'); return; }
-        if (!endVal) { alert('End-Datum fehlt'); return; }
+        if (!startVal) { alert(L.startMissing); return; }
+        if (!endVal) { alert(L.endMissing); return; }
 
         const catVal = document.getElementById('eventCategory').value;
         if (!catVal || catVal === '0') {
-            alert(LOCALE === 'de' ? 'Bitte eine Kategorie auswählen' : 'Please select a category');
+            alert(L.selectCategory);
             document.getElementById('eventCategory').focus();
             return;
         }
@@ -835,7 +896,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const text = await resp.text();
             console.log('[JWCalendar] saveEvent response:', resp.status, text);
             let data;
-            try { data = JSON.parse(text); } catch(pe) { alert('Server-Fehler: ' + text.substring(0, 200)); return; }
+            try { data = JSON.parse(text); } catch(pe) { alert(L.serverError + ' ' + text.substring(0, 200)); return; }
             if (data.success) {
                 closeModal();
                 calendar.refetchEvents();
@@ -861,7 +922,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const text = await resp.text();
             console.log('[JWCalendar] deleteEvent response:', resp.status, text);
             let data;
-            try { data = JSON.parse(text); } catch(pe) { alert('Server-Fehler: ' + text.substring(0, 200)); return; }
+            try { data = JSON.parse(text); } catch(pe) { alert(L.serverError + ' ' + text.substring(0, 200)); return; }
             if (data.success) {
                 hidePopup();
                 closeModal();
@@ -877,20 +938,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Init FullCalendar
     const calendarEl = document.getElementById('calendar');
     calendar = new FullCalendar.Calendar(calendarEl, {
-        locale: LOCALE,
+        locale: '<?php echo $fcLocale; ?>',
         initialView: '<?php echo $defaultView; ?>',
         eventDisplay: '<?php echo $eventDisplayFc; ?>',
+        dayHeaderContent: fcDayHeader,
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
             right: 'dayGridMonth,timeGridWeek,timeGridDay,listMonth'
-        },
-        buttonText: {
-            today: LOCALE === 'de' ? 'Heute' : 'Today',
-            month: LOCALE === 'de' ? 'Monat' : 'Month',
-            week: LOCALE === 'de' ? 'Woche' : 'Week',
-            day: LOCALE === 'de' ? 'Tag' : 'Day',
-            list: LOCALE === 'de' ? 'Liste' : 'List'
         },
         height: 'auto',
         contentHeight: 'auto',
@@ -993,6 +1048,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (miniCalendar) {
                 miniCalendar.gotoDate(info.start);
             }
+            fcFixTitle(calendarEl, info.view);
         }
     });
 
@@ -1001,7 +1057,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Init mini calendar in sidebar
     const miniEl = document.getElementById('miniCalendar');
     miniCalendar = new FullCalendar.Calendar(miniEl, {
-        locale: LOCALE,
+        locale: '<?php echo $fcLocale; ?>',
         initialView: 'dayGridMonth',
         headerToolbar: {
             left: 'prev',
@@ -1012,6 +1068,8 @@ document.addEventListener('DOMContentLoaded', function() {
         fixedWeekCount: false,
         firstDay: <?php echo $firstDay; ?>,
         dayHeaderFormat: { weekday: 'narrow' },
+        dayHeaderContent: fcDayHeaderNarrow,
+        datesSet: function(info) { fcFixTitle(miniEl, info.view); },
         dateClick: function(info) {
             calendar.gotoDate(info.date);
             calendar.changeView('timeGridDay');
