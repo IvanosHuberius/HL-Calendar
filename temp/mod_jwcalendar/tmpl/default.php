@@ -19,7 +19,8 @@ $wa = Factory::getApplication()->getDocument()->getWebAssetManager();
 $wa->registerAndUseStyle('mod_jwcalendar.fc', 'https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css');
 $wa->registerAndUseScript('mod_jwcalendar.fc', 'https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js', [], ['defer' => false]);
 $wa->registerAndUseScript('mod_jwcalendar.fclocales', 'https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.11/locales-all.global.min.js', [], ['defer' => false], ['mod_jwcalendar.fc']);
-$wa->registerAndUseStyle('mod_jwcalendar.style', 'media/com_calendar/css/calendar.css');
+$cssVer = @filemtime(JPATH_ROOT . '/media/com_calendar/css/calendar.css') ?: '1';
+$wa->registerAndUseStyle('mod_jwcalendar.style', 'media/com_calendar/css/calendar.css', ['version' => (string) $cssVer]);
 
 $baseUrl = Uri::root() . 'index.php?option=com_calendar&task=api.';
 $token = Session::getFormToken();
@@ -328,8 +329,13 @@ document.addEventListener('DOMContentLoaded', function() {
     ], JSON_UNESCAPED_UNICODE); ?>;
 
     function fcDayHeader(arg) {
-        const wd = CAL_NAMES.daysShort[arg.date.getDay()];
-        return (arg.view.type.indexOf('timeGrid') === 0) ? (wd + ' ' + arg.date.getDate()) : wd;
+        const t = arg.view.type, d = arg.date;
+        // List view: keep the full date (weekday, day month year) — not just the weekday
+        if (t.indexOf('list') === 0) {
+            return CAL_NAMES.days[d.getDay()] + ', ' + d.getDate() + '. ' + CAL_NAMES.months[d.getMonth()] + ' ' + d.getFullYear();
+        }
+        const wd = CAL_NAMES.daysShort[d.getDay()];
+        return (t.indexOf('timeGrid') === 0) ? (wd + ' ' + d.getDate()) : wd;
     }
     function fcDayHeaderNarrow(arg) {
         return (CAL_NAMES.daysShort[arg.date.getDay()] || '').charAt(0);
@@ -974,7 +980,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 info.el.style.color = txt;
             }
         },
-        datesSet: function(info) { if (miniCal) miniCal.gotoDate(info.view.currentStart); fcFixTitle(calEl, info.view); }
+        datesSet: function(info) { if (miniCal) miniCal.gotoDate(info.view.currentStart); fcFixTitle(calEl, info.view); const wrap = calEl.closest('.jw-calendar-wrapper'); if (wrap) wrap.classList.toggle('jw-view-list', info.view.type.indexOf('list') === 0); }
     });
     calendar.render();
 

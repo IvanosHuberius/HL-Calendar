@@ -19,7 +19,8 @@ $wa = Factory::getApplication()->getDocument()->getWebAssetManager();
 $wa->registerAndUseStyle('com_calendar.fullcalendar', 'https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css');
 $wa->registerAndUseScript('com_calendar.fullcalendar', 'https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js', [], ['defer' => false]);
 $wa->registerAndUseScript('com_calendar.fclocales', 'https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.11/locales-all.global.min.js', [], ['defer' => false], ['com_calendar.fullcalendar']);
-$wa->registerAndUseStyle('com_calendar.style', 'media/com_calendar/css/calendar.css');
+$cssVer = @filemtime(JPATH_ROOT . '/media/com_calendar/css/calendar.css') ?: '1';
+$wa->registerAndUseStyle('com_calendar.style', 'media/com_calendar/css/calendar.css', ['version' => (string) $cssVer]);
 
 $baseUrl = Uri::root() . 'index.php?option=com_calendar&task=api.';
 $token = Session::getFormToken();
@@ -76,7 +77,7 @@ $primaryLight = sprintf('#%02x%02x%02x', min(255, $pr + round((255 - $pr) * 0.85
     #jw-calendar-app .fc-day-today { background: <?php echo $todayHighlight; ?> !important; }
 </style>
 
-<div id="jw-calendar-app" class="jw-calendar-wrapper jw-evtstyle-<?php echo $eventStyle; ?>"<?php echo $isRtl ? ' dir="rtl"' : ''; ?>>
+<div id="jw-calendar-app" class="jw-calendar-wrapper jw-fullpage jw-evtstyle-<?php echo $eventStyle; ?>"<?php echo $isRtl ? ' dir="rtl"' : ''; ?>>
     <?php if ($showSidebar) : ?>
     <!-- Sidebar -->
     <div class="jw-calendar-sidebar" id="calSidebar">
@@ -321,8 +322,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Render FullCalendar day-headers in the site language (instead of browser Intl)
     function fcDayHeader(arg) {
-        const wd = CAL_NAMES.daysShort[arg.date.getDay()];
-        return (arg.view.type.indexOf('timeGrid') === 0) ? (wd + ' ' + arg.date.getDate()) : wd;
+        const t = arg.view.type, d = arg.date;
+        // List view: keep the full date (weekday, day month year) — not just the weekday
+        if (t.indexOf('list') === 0) {
+            return CAL_NAMES.days[d.getDay()] + ', ' + d.getDate() + '. ' + CAL_NAMES.months[d.getMonth()] + ' ' + d.getFullYear();
+        }
+        const wd = CAL_NAMES.daysShort[d.getDay()];
+        return (t.indexOf('timeGrid') === 0) ? (wd + ' ' + d.getDate()) : wd;
     }
     function fcDayHeaderNarrow(arg) {
         return (CAL_NAMES.daysShort[arg.date.getDay()] || '').charAt(0);
@@ -1049,6 +1055,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 miniCalendar.gotoDate(info.start);
             }
             fcFixTitle(calendarEl, info.view);
+            const wrap = calendarEl.closest('.jw-calendar-wrapper');
+            if (wrap) wrap.classList.toggle('jw-view-list', info.view.type.indexOf('list') === 0);
         }
     });
 

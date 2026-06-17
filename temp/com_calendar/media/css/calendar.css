@@ -27,13 +27,18 @@
 /* Layout */
 .jw-calendar-wrapper {
     display: flex;
-    min-height: 80vh;
     font-family: var(--jw-font);
     color: var(--jw-text);
     background: var(--jw-bg);
     border-radius: var(--jw-radius);
     overflow: hidden;
     box-shadow: var(--jw-shadow);
+}
+
+/* Big min-height only for the full-page component in grid views — keeps it substantial.
+   The module and the list view fit their content (no excess empty space). */
+.jw-calendar-wrapper.jw-fullpage:not(.jw-view-list) {
+    min-height: 80vh;
 }
 
 .jw-calendar-sidebar {

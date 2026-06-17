@@ -2,7 +2,7 @@
 <extension type="package" method="upgrade">
     <name>PKG_JWCALENDAR</name>
     <packagename>jwcalendar</packagename>
-    <version>1.8.1</version>
+    <version>1.8.2</version>
     <creationDate>2026-03-25</creationDate>
     <author>huberlabs.ch</author>
     <authorEmail>support@huberlabs.ch</authorEmail>

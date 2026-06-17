@@ -4,11 +4,11 @@
 
 | Feld | Wert |
 |------|------|
-| **Version** | 1.8.1 (Lokalisierung – Code fertig & live getestet auf Georgisch) ✅ |
+| **Version** | 1.8.2 (Lokalisierung + Listenansicht-/Höhen-/Cache-Fixes) ✅ live getestet (Georgisch) |
 | **Vorgänger** | 1.8.0 (live), 1.7.2 (JED seit 2026-04-04) |
-| **Status** | Lokalisierung verifiziert (eiwtestzone, Georgisch). Release (GitHub v1.8.1 + XML) offen |
+| **Status** | Verifiziert auf eiwtestzone (Georgisch). Release (GitHub v1.8.2 + XML + JED) offen |
 | **Offene Bugs** | Keine bekannt |
-| **Letzte Aktualisierung** | 2026-06-16 |
+| **Letzte Aktualisierung** | 2026-06-17 |
 | **Update-Server** | GitHub (raw) + eiwtestzone (Übergang für 1.7.2-Nutzer) |
 | **Download** | GitHub-Release v1.8.0 (`pkg_jwcalendar_v1.8.0.zip`) |
 
@@ -28,6 +28,11 @@
 - Update-Server für automatische Updates
 
 ## Changelog
+
+### v1.8.2 (2026-06-17) – Bugfixes (vom Georgier gemeldet) ✅ getestet (Release offen)
+- **Listenansicht-Datum:** In der Terminübersicht/Listenansicht fehlte das Datum (nur Wochentag) – Nebeneffekt der 1.8.1-Lokalisierung. Jetzt volles Datum.
+- **Modul/Liste zu lang:** `min-height: 80vh` am Wrapper machte alles bildschirmhoch. Jetzt nur Vollseiten-Komponente in Grid-Ansichten; Modul + Listenansicht passen sich dem Inhalt an.
+- **CSS-Cache-Busting:** `calendar.css` mit Datei-Zeitstempel-Version → Nutzer bekommen nach Update sofort das neue CSS (vorher erst nach Strg+F5).
 
 ### v1.8.1 (2026-06-16) – Lokalisierung ✅ getestet (Release offen)
 - **Vollständige Sprachunterstützung:** Kalender (Monat, Wochentage, Buttons, Titel) folgt jetzt der **Joomla-Seitensprache** – **browserunabhängig**

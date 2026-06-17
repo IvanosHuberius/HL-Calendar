@@ -3,7 +3,7 @@
 ## Projekt-Kurzinfo
 - **Name:** HL Kalender (JW Calendar)
 - **Typ:** Joomla 6 Package (`pkg_jwcalendar`) mit Komponente + Modul
-- **Version:** 1.8.1 (Lokalisierung – Komplett-Sprachunterstützung; Vorgänger 1.8.0)
+- **Version:** 1.8.2 (Lokalisierung + Listenansicht-/Höhen-Fixes; Vorgänger 1.8.0, 1.7.2)
 - **JED:** https://extensions.joomla.org/extension/calendars-a-events/hl-calendar/
 - **Autor:** huberlabs.ch (support@huberlabs.ch)
 - **Lizenz:** GPLv2+
@@ -110,6 +110,12 @@ Der Build erstellt drei ZIPs: `com_calendar.zip`, `mod_jwcalendar.zip` und `pkg_
 - **Lösung (browserunabhängig):** Monats-/Wochentagsnamen serverseitig aus Joomla holen (`Text::_('JUNE')`, `Text::_('MONDAY')`, `Text::_('MON')` … Standard-Joomla-Datumskonstanten) → als `CAL_NAMES` ins JS → per `dayHeaderContent` (Wochentage) + Titel-Override in `datesSet` (Monat) rendern. In `default.php` von Komponente + Modul (Haupt- + Mini-Kalender).
 - `locales-all`-CDN für FullCalendar: `https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.11/locales-all.global.min.js` (registriert `globalLocales`; liefert lokalisierte Button-Texte/RTL). NICHT `fullcalendar@.../locales-all` (404).
 - Dialog-/JS-Texte als `Text::_()`-Schlüssel im `L`-Objekt; Sprachdateien unter `site/language/<lang>/` (Komponente) und `language/<lang>/` (Modul). RTL via `$lang->isRtl()` → `dir="rtl"` am Wrapper.
+
+## Fixes 1.8.2
+
+- **Listenansicht-Datum:** `fcDayHeader()` gab in der Listenansicht (`listMonth`) nur den Wochentag zurück → Datum fehlte. Fix: bei `view.type` mit `list...` das volle Datum (Wochentag, Tag Monat Jahr) zurückgeben. Komponente + Modul.
+- **Höhe/leerer Platz:** `.jw-calendar-wrapper { min-height: 80vh }` machte Kalender (auch Modul + Listenansicht) immer 80vh hoch. Fix: `min-height: 80vh` nur noch via `.jw-calendar-wrapper.jw-fullpage:not(.jw-view-list)` → nur Vollseiten-Komponente in Grid-Ansichten. `jw-fullpage` an Komponenten-Wrapper; `jw-view-list` per `datesSet` togglen. Modul = nie `jw-fullpage` → passt sich Inhalt an.
+- **CSS-Cache:** `calendar.css` wird mit `?{filemtime}` als Version geladen (`['version' => …]` in `registerAndUseStyle`), sonst serviert der Browser nach einem Update das **alte** CSS (Joomla-Mediaversion `?xxxx` ändert sich bei Extension-Update nicht zuverlässig). Symptom war: Layout-Fix wirkte erst nach Strg+F5.
 
 ## Lessons Learned
 
