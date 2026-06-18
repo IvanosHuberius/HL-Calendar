@@ -3,7 +3,7 @@
 ## Projekt-Kurzinfo
 - **Name:** HL Kalender (JW Calendar)
 - **Typ:** Joomla 6 Package (`pkg_jwcalendar`) mit Komponente + Modul
-- **Version:** 1.8.2 (Lokalisierung + Listenansicht-/Höhen-Fixes; Vorgänger 1.8.0, 1.7.2)
+- **Version:** 1.8.3 (Popup-/Wiederholungs-Datum auch browserunabhängig; Vorgänger 1.8.2, 1.8.0)
 - **JED:** https://extensions.joomla.org/extension/calendars-a-events/hl-calendar/
 - **Autor:** huberlabs.ch (support@huberlabs.ch)
 - **Lizenz:** GPLv2+
@@ -110,6 +110,10 @@ Der Build erstellt drei ZIPs: `com_calendar.zip`, `mod_jwcalendar.zip` und `pkg_
 - **Lösung (browserunabhängig):** Monats-/Wochentagsnamen serverseitig aus Joomla holen (`Text::_('JUNE')`, `Text::_('MONDAY')`, `Text::_('MON')` … Standard-Joomla-Datumskonstanten) → als `CAL_NAMES` ins JS → per `dayHeaderContent` (Wochentage) + Titel-Override in `datesSet` (Monat) rendern. In `default.php` von Komponente + Modul (Haupt- + Mini-Kalender).
 - `locales-all`-CDN für FullCalendar: `https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.11/locales-all.global.min.js` (registriert `globalLocales`; liefert lokalisierte Button-Texte/RTL). NICHT `fullcalendar@.../locales-all` (404).
 - Dialog-/JS-Texte als `Text::_()`-Schlüssel im `L`-Objekt; Sprachdateien unter `site/language/<lang>/` (Komponente) und `language/<lang>/` (Modul). RTL via `$lang->isRtl()` → `dir="rtl"` am Wrapper.
+
+## Fixes 1.8.3
+
+- **Popup-/Wiederholungs-Datum browserunabhängig:** `formatDateRange()`/`formatRange()` (Termin-Detail-Popup) und der Wiederholungs-Dropdown nutzten noch `toLocaleDateString(LOCALE)` (Browser-Intl) → Datum bei Georgisch englisch. Jetzt aus `CAL_NAMES` (Joomla). **Regel: NIE `toLocale…` für Datumsnamen – immer `CAL_NAMES`.** Komponente + Modul.
 
 ## Fixes 1.8.2
 

@@ -430,13 +430,16 @@ document.addEventListener('DOMContentLoaded', function() {
     const toMySQL = (v, allDay) => { if (!v) return ''; const d = new Date(v); return allDay ? d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+' 00:00:00' : d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+' '+pad(d.getHours())+':'+pad(d.getMinutes())+':00'; };
 
     function formatRange(s, e, allDay) {
-        const o = allDay ? {weekday:'long',year:'numeric',month:'long',day:'numeric'} : {weekday:'long',year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'};
-        let str = s.toLocaleDateString(LOC, o);
+        // Build from Joomla site-language names (CAL_NAMES) \u2014 browser-independent
+        const pad = n => String(n).padStart(2, '0');
+        const fd = d => CAL_NAMES.days[d.getDay()] + ', ' + d.getDate() + '. ' + CAL_NAMES.months[d.getMonth()] + ' ' + d.getFullYear();
+        const ft = d => pad(d.getHours()) + ':' + pad(d.getMinutes());
+        let str = fd(s) + (allDay ? '' : ', ' + ft(s));
         if (e && e.getTime() !== s.getTime()) {
             if (s.toDateString() === e.toDateString() && !allDay) {
-                str += ' \u2013 ' + e.toLocaleTimeString(LOC, {hour:'2-digit',minute:'2-digit'});
+                str += ' \u2013 ' + ft(e);
             } else {
-                str += ' \u2013 ' + e.toLocaleDateString(LOC, o);
+                str += ' \u2013 ' + fd(e) + (allDay ? '' : ', ' + ft(e));
             }
         }
         return str;
@@ -690,10 +693,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const sel = $('evtRecur');
         const currentVal = sel.value;
         const dt = new Date(startVal);
-        const loc = LOCALE_INTL;
-        const dayName = dt.toLocaleDateString(loc, {weekday: 'long'});
+        const dayName = CAL_NAMES.days[dt.getDay()];
         const monthDay = dt.getDate();
-        const yearlyDate = dt.toLocaleDateString(loc, {day: 'numeric', month: 'long'});
+        const yearlyDate = monthDay + '. ' + CAL_NAMES.months[dt.getMonth()];
         const weekOfMonth = Math.ceil(monthDay / 7);
         const lastDay = new Date(dt.getFullYear(), dt.getMonth() + 1, 0).getDate();
         const isLast = (monthDay + 7) > lastDay;

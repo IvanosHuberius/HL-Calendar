@@ -4,7 +4,7 @@
 
 | Feld | Wert |
 |------|------|
-| **Version** | 1.8.2 (Lokalisierung + Listenansicht-/Höhen-/Cache-Fixes) ✅ live getestet (Georgisch) |
+| **Version** | 1.8.3 (Popup-/Wiederholungs-Datum browserunabhängig) – gebaut, Georg testet |
 | **Vorgänger** | 1.8.0 (live), 1.7.2 (JED seit 2026-04-04) |
 | **Status** | Verifiziert auf eiwtestzone (Georgisch). Release (GitHub v1.8.2 + XML + JED) offen |
 | **Offene Bugs** | Keine bekannt |
@@ -28,6 +28,9 @@
 - Update-Server für automatische Updates
 
 ## Changelog
+
+### v1.8.3 (2026-06-18) – Bugfix (von Georg gemeldet)
+- **Termin-Detail-Popup zeigte das Datum auf Englisch** (z.B. „Friday, 26 June 2026") trotz georgischer Seite – `formatDateRange()` nutzte noch Browser-`Intl`. Jetzt aus Joomla (`CAL_NAMES`), browserunabhängig. Auch der Wiederholungs-Dropdown (Tages-/Monatsnamen) umgestellt.
 
 ### v1.8.2 (2026-06-17) – Bugfixes (vom Georgier gemeldet) ✅ getestet (Release offen)
 - **Listenansicht-Datum:** In der Terminübersicht/Listenansicht fehlte das Datum (nur Wochentag) – Nebeneffekt der 1.8.1-Lokalisierung. Jetzt volles Datum.

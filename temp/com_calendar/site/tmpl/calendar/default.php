@@ -552,16 +552,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Format date for display
     function formatDateRange(start, end, allDay) {
-        const opts = allDay
-            ? { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }
-            : { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' };
-        let str = start.toLocaleDateString(LOCALE, opts);
+        // Build from Joomla site-language names (CAL_NAMES) — browser-independent
+        const pad = n => String(n).padStart(2, '0');
+        const fd = d => CAL_NAMES.days[d.getDay()] + ', ' + d.getDate() + '. ' + CAL_NAMES.months[d.getMonth()] + ' ' + d.getFullYear();
+        const ft = d => pad(d.getHours()) + ':' + pad(d.getMinutes());
+        let str = fd(start) + (allDay ? '' : ', ' + ft(start));
         if (end && end.getTime() !== start.getTime()) {
-            const endStr = end.toLocaleDateString(LOCALE, opts);
             if (start.toDateString() === end.toDateString() && !allDay) {
-                str += ' – ' + end.toLocaleTimeString(LOCALE, { hour: '2-digit', minute: '2-digit' });
+                str += ' – ' + ft(end);
             } else {
-                str += ' – ' + endStr;
+                str += ' – ' + fd(end) + (allDay ? '' : ', ' + ft(end));
             }
         }
         return str;
@@ -632,10 +632,9 @@ document.addEventListener('DOMContentLoaded', function() {
         const sel = document.getElementById('eventRecurrence');
         const currentVal = sel.value;
         const dt = new Date(startVal);
-        const loc = LOCALE_INTL;
-        const dayName = dt.toLocaleDateString(loc, {weekday: 'long'});
+        const dayName = CAL_NAMES.days[dt.getDay()];
         const monthDay = dt.getDate();
-        const yearlyDate = dt.toLocaleDateString(loc, {day: 'numeric', month: 'long'});
+        const yearlyDate = monthDay + '. ' + CAL_NAMES.months[dt.getMonth()];
         const weekOfMonth = Math.ceil(monthDay / 7);
         const lastDay = new Date(dt.getFullYear(), dt.getMonth() + 1, 0).getDate();
         const isLast = (monthDay + 7) > lastDay;
