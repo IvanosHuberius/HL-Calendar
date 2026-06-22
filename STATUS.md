@@ -4,7 +4,7 @@
 
 | Feld | Wert |
 |------|------|
-| **Version** | 1.8.3 (Popup-/Wiederholungs-Datum browserunabhängig) – von Georg OK, GitHub-Release live |
+| **Version** | 1.8.3 ✅ VOLL RELEASED – GitHub-Release live, JED auf 1.8.3, Auto-Update von GitHub aktiv |
 | **Vorgänger** | 1.8.0 (live), 1.7.2 (JED seit 2026-04-04) |
 | **Status** | Verifiziert auf eiwtestzone (Georgisch). Release (GitHub v1.8.2 + XML + JED) offen |
 | **Offene Bugs** | Keine bekannt |
@@ -66,7 +66,8 @@
 
 ## Offen
 
-- [ ] **JED-Eintrag** auf Version 1.8.0 aktualisieren (nur Katalogpflege – technisch läuft alles)
+- *(optional)* eiwtestzone-`jwcalendar_update.xml` auf 1.8.3 — nur falls noch jemand auf 1.7.2 hängt
+- Sonst: nichts offen — 1.8.3 ist voll ausgeliefert ✅
 
 ## Links
 
