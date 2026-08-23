@@ -54,6 +54,19 @@ $defaultEvtColor  = $cparams->get('default_event_color', '#3788d8');
 $eventStyle       = $cparams->get('event_display_style', 'dot_medium');
 $eventDisplayFc   = ($eventStyle === 'bar') ? 'block' : 'auto';
 
+// Start date: optionally open on the next upcoming event instead of today
+// (see COM_CALENDAR_CONFIG_START_DATE_MODE). Never fatal – falls back to today.
+$startMode   = $cparams->get('start_date_mode', 'today');
+$initialDate = '';
+if ($startMode !== 'today') {
+    try {
+        $initialDate = (string) (new \Jewe\Component\Calendar\Site\Service\EventService())
+            ->resolveStartDate($user, $startMode, $defaultView, $firstDay);
+    } catch (\Throwable $e) {
+        $initialDate = '';
+    }
+}
+
 // Compute primary-light from primary color
 $pr = hexdec(substr($primaryColor, 1, 2));
 $pg = hexdec(substr($primaryColor, 3, 2));
@@ -945,6 +958,9 @@ document.addEventListener('DOMContentLoaded', function() {
     calendar = new FullCalendar.Calendar(calendarEl, {
         locale: '<?php echo $fcLocale; ?>',
         initialView: '<?php echo $defaultView; ?>',
+<?php if ($initialDate) : ?>
+        initialDate: '<?php echo $initialDate; ?>',
+<?php endif; ?>
         eventDisplay: '<?php echo $eventDisplayFc; ?>',
         dayHeaderContent: fcDayHeader,
         headerToolbar: {
@@ -1066,6 +1082,9 @@ document.addEventListener('DOMContentLoaded', function() {
     miniCalendar = new FullCalendar.Calendar(miniEl, {
         locale: '<?php echo $fcLocale; ?>',
         initialView: 'dayGridMonth',
+<?php if ($initialDate) : ?>
+        initialDate: '<?php echo $initialDate; ?>',
+<?php endif; ?>
         headerToolbar: {
             left: 'prev',
             center: 'title',

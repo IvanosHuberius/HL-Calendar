@@ -27,6 +27,9 @@
 /* Layout */
 .jw-calendar-wrapper {
     display: flex;
+    flex-wrap: wrap;
+    container-type: inline-size;
+    container-name: jwcal;
     font-family: var(--jw-font);
     color: var(--jw-text);
     background: var(--jw-bg);
@@ -957,5 +960,103 @@
 
     .jw-calendar-wrapper {
         box-shadow: none;
+    }
+}
+
+/* ========================================
+   Container Queries – narrow module positions
+   ========================================
+   The @media rules above react to the BROWSER WINDOW. A module published in a
+   narrow position (sidebar, 3:12 column) keeps the desktop layout on a wide
+   screen: the 260px sidebar eats the calendar and the toolbar/week numbers
+   collide. These rules react to the width of the CALENDAR ITSELF.
+   (Reported by George, 17.08.2026.) */
+
+@container jwcal (max-width: 600px) {
+    .jw-calendar-sidebar {
+        flex: 0 0 100%;
+        width: 100% !important;
+        min-width: 100% !important;
+        border-right: none;
+        border-bottom: 1px solid var(--jw-border);
+        padding: 12px;
+    }
+
+    .jw-calendar-sidebar.collapsed {
+        flex: 0 0 100%;
+        width: 100% !important;
+        min-width: 100% !important;
+        max-height: 60px;
+        padding: 12px;
+        overflow: hidden;
+    }
+
+    .jw-mini-calendar {
+        display: none;
+    }
+
+    .jw-calendar-main {
+        flex: 0 0 100%;
+    }
+
+    .jw-calendar-main .fc-toolbar {
+        flex-direction: column;
+        gap: 8px;
+        padding: 8px 12px;
+    }
+
+    .jw-calendar-main .fc-toolbar-title {
+        font-size: 18px !important;
+        text-align: center;
+    }
+}
+
+/* Really narrow: typical sidebar module (~250–450px) */
+@container jwcal (max-width: 450px) {
+    .jw-calendar-main .fc-toolbar {
+        padding: 8px;
+        gap: 6px;
+    }
+
+    .jw-calendar-main .fc-toolbar-chunk {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 4px;
+    }
+
+    .jw-calendar-main .fc-toolbar-title {
+        font-size: 16px !important;
+    }
+
+    .jw-calendar-main .fc-button {
+        padding: 4px 10px !important;
+        font-size: 12px !important;
+    }
+
+    .jw-calendar-main .fc-prev-button,
+    .jw-calendar-main .fc-next-button {
+        width: 30px;
+        height: 30px;
+        padding: 2px 6px !important;
+    }
+
+    /* Week numbers are absolutely positioned over the day cell and collide
+       with the day number once the cells get this small. */
+    .jw-calendar-main .fc-daygrid-week-number {
+        display: none;
+    }
+
+    .jw-calendar-main .fc th {
+        font-size: 10px;
+    }
+
+    .jw-calendar-main .fc-col-header-cell-cushion {
+        padding: 4px 2px;
+    }
+
+    .jw-calendar-main .fc-daygrid-day-number {
+        font-size: 12px;
+        padding: 2px 4px !important;
     }
 }

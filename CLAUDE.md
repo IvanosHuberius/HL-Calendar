@@ -3,10 +3,29 @@
 ## Projekt-Kurzinfo
 - **Name:** HL Kalender (JW Calendar)
 - **Typ:** Joomla 6 Package (`pkg_jwcalendar`) mit Komponente + Modul
-- **Version:** 1.8.3 (Popup-/Wiederholungs-Datum auch browserunabhängig; Vorgänger 1.8.2, 1.8.0)
+- **Version:** 1.9.1 (schmale Modulpositionen; 1.9.0 = Startdatum „nächster Termin", nur an Georg als Test)
 - **JED:** https://extensions.joomla.org/extension/calendars-a-events/hl-calendar/
 - **Autor:** huberlabs.ch (support@huberlabs.ch)
 - **Lizenz:** GPLv2+
+
+## ⚠️ Stolperfallen (vor dem Debuggen zuerst lesen!)
+
+- **Datumsnamen NIE mit `toLocaleDateString/toLocaleString`** – hängt am Browser-`Intl`, das z.B. kein Georgisch kennt → Browsersprache. **Immer `CAL_NAMES`** (aus Joomla `Text::_`). Gilt für Grid, Listenansicht, Detail-Popup (`formatDateRange`/`formatRange`) UND Wiederholungs-Dropdown.
+- **FullCalendar-Monats-/Wochentagsnamen kommen aus Browser-`Intl`, NICHT aus der Locale-Datei** – bei unbekannter Sprache falsch. Lösung: `CAL_NAMES` per `dayHeaderContent` (Wochentage) + Titel-Override in `datesSet` (Monat).
+- **Update-XML MUSS `<client>site</client>` haben** – sonst nimmt Joomla client_id=1 (admin) an, Paket ist aber client_id=0 (site) → `extension_id=0` → Update-View blendet es aus („keine Updates" trotz gültiger XML).
+- **CSS-Cache:** `calendar.css` mit `['version' => filemtime]` in `registerAndUseStyle` versionieren – sonst serviert der Browser nach Update altes CSS (Joomla-Mediaversion bustet nicht zuverlässig; Symptom: Fix wirkt erst nach Strg+F5).
+- **`fcDayHeader()` muss bei `view.type` `list…` das volle Datum** liefern (nicht nur Wochentag), sonst fehlt in der Listenansicht das Datum.
+- **Responsive für das MODUL geht NUR über `@container`, nicht `@media`** – `@media (max-width)` misst das Browser*fenster*. Ein Modul in einer schmalen Position (Sidebar, 3:12) behält auf einem breiten Desktop das Desktop-Layout: 260px Seitenleiste frisst den 320px-Kalender, Toolbar und Kalenderwochen überlappen. Lösung: `container-type: inline-size` + `container-name: jwcal` am `.jw-calendar-wrapper`, Regeln als `@container jwcal (max-width: …)`.
+- **`@container`-Regeln greifen nur auf NACHFAHREN, nie auf den Container selbst** – `flex-direction` des Wrappers lässt sich darin nicht ändern. Deshalb hat der Wrapper `flex-wrap: wrap` und die Seitenleiste bekommt im Container-Query `flex: 0 0 100%` → der Hauptkalender rutscht in die nächste Zeile.
+- **`container-type` macht das Element zum Bezugsrahmen für `position: fixed/absolute`** (`contain: layout`). Modal und Popup liegen deshalb bewusst AUSSERHALB des `.jw-calendar-wrapper` – beim Umbauen der Templates unbedingt so lassen.
+- **`min-height: 80vh` nur an `.jw-fullpage:not(.jw-view-list)`** – nie am nackten Wrapper, sonst wird auch Modul + Listenansicht bildschirmhoch.
+- **FullCalendar `locales-all` von `@fullcalendar/core@6.1.11/locales-all.global.min.js`** (NICHT `fullcalendar@…/locales-all` → 404).
+- **`gh` CLI ist nicht installiert** – GitHub-Releases via `git credential fill` (Token) + `curl` auf die API erstellen.
+- **Immer Komponente UND Modul synchron ändern** – jeder Fix muss in beide `default.php`.
+- **Event-/Wiederholungslogik NUR in `EventService`** (`site/src/Service/EventService.php`) – `ApiController` delegiert bloß. Wer Wiederholungen/Feiertage im Controller ändert, bringt Kalenderanzeige und „nächster Termin" auseinander.
+- **Modul benutzt eine Komponenten-Klasse** (`EventService`) – immer mit `class_exists()` + `try/catch` absichern, sonst White Screen, wenn jemand nur das Modul aktualisiert hat.
+- **Update-XML erst NACH dem GitHub-Release auf die neue Version setzen** – sonst bietet Joomla ein Update an, dessen Download-Asset noch gar nicht existiert (404 beim Installieren).
+- **PHP-CLI liegt unter `C:\Users\THE BEAST II\php\php.exe`** (nicht im PATH!) – nach jeder PHP-Änderung `& "C:\Users\THE BEAST II\php\php.exe" -l <datei>` laufen lassen.
 
 ## Technik
 - **Frontend:** FullCalendar.js 6.1.11 (via CDN jsdelivr)
@@ -42,7 +61,8 @@ Kalender/
 | Datei | Beschreibung |
 |-------|-------------|
 | `com_calendar/site/tmpl/calendar/default.php` | Frontend-Template (Hauptansicht) |
-| `com_calendar/site/src/Controller/ApiController.php` | API-Controller (AJAX-Endpoints) |
+| `com_calendar/site/src/Controller/ApiController.php` | API-Controller (AJAX-Endpoints, delegiert an EventService) |
+| `com_calendar/site/src/Service/EventService.php` | **Einzige** Quelle für Event-Abfrage, Wiederholungen, Feiertags-/Ausnahme-Logik, „nächster Termin" |
 | `com_calendar/media/css/calendar.css` | Haupt-CSS |
 | `com_calendar/administrator/config.xml` | Backend-Konfiguration |
 | `com_calendar/administrator/sql/install.mysql.sql` | DB-Schema |
@@ -56,6 +76,7 @@ Alle Aufrufe via `index.php?option=com_calendar&task=api.<method>`:
 | Endpoint | Beschreibung |
 |----------|-------------|
 | `api.getEvents` | Events laden (Zeitraum-Filter) |
+| `api.getNextEventDate` | Datum des nächsten anstehenden Termins (`{"date":"YYYY-MM-DD"|null}`) |
 | `api.saveEvent` | Event erstellen/aktualisieren |
 | `api.deleteEvent` | Event loeschen |
 | `api.moveEvent` | Event verschieben/resizen (Drag & Drop) |
@@ -111,15 +132,19 @@ Der Build erstellt drei ZIPs: `com_calendar.zip`, `mod_jwcalendar.zip` und `pkg_
 - `locales-all`-CDN für FullCalendar: `https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.11/locales-all.global.min.js` (registriert `globalLocales`; liefert lokalisierte Button-Texte/RTL). NICHT `fullcalendar@.../locales-all` (404).
 - Dialog-/JS-Texte als `Text::_()`-Schlüssel im `L`-Objekt; Sprachdateien unter `site/language/<lang>/` (Komponente) und `language/<lang>/` (Modul). RTL via `$lang->isRtl()` → `dir="rtl"` am Wrapper.
 
-## Fixes 1.8.3
+## Fix 1.9.1 – schmale Modulpositionen
 
-- **Popup-/Wiederholungs-Datum browserunabhängig:** `formatDateRange()`/`formatRange()` (Termin-Detail-Popup) und der Wiederholungs-Dropdown nutzten noch `toLocaleDateString(LOCALE)` (Browser-Intl) → Datum bei Georgisch englisch. Jetzt aus `CAL_NAMES` (Joomla). **Regel: NIE `toLocale…` für Datumsnamen – immer `CAL_NAMES`.** Komponente + Modul.
+- Das Modul in schmalen Positionen (Sidebar, 3:12) war unbrauchbar: bei 320px Modulbreite belegte die Seitenleiste 260px, der Kalender bekam 60px. Ohne Seitenleiste überlappten Toolbar-Buttons den Titel und die Kalenderwochen die Tageszahlen. (Von Georg gemeldet, 17.08.2026.)
+- Fix rein in `calendar.css` (gilt damit automatisch für Komponente **und** Modul): Container-Queries `@container jwcal`. Zwei Stufen – **≤600px**: Seitenleiste stapelt über den Kalender, Mini-Kalender aus, Toolbar untereinander. **≤450px**: kompakte Buttons/Schriften, Kalenderwochen ausgeblendet (sie liegen absolut positioniert über den Tageszahlen).
+- Verifiziert auf eiwtestzone bei 320px: Seitenleiste und Kalender je 100% Breite gestapelt, Toolbar `column`, keine Überlappung, kein horizontaler Überlauf.
 
-## Fixes 1.8.2
+## Features ab 1.9.0
 
-- **Listenansicht-Datum:** `fcDayHeader()` gab in der Listenansicht (`listMonth`) nur den Wochentag zurück → Datum fehlte. Fix: bei `view.type` mit `list...` das volle Datum (Wochentag, Tag Monat Jahr) zurückgeben. Komponente + Modul.
-- **Höhe/leerer Platz:** `.jw-calendar-wrapper { min-height: 80vh }` machte Kalender (auch Modul + Listenansicht) immer 80vh hoch. Fix: `min-height: 80vh` nur noch via `.jw-calendar-wrapper.jw-fullpage:not(.jw-view-list)` → nur Vollseiten-Komponente in Grid-Ansichten. `jw-fullpage` an Komponenten-Wrapper; `jw-view-list` per `datesSet` togglen. Modul = nie `jw-fullpage` → passt sich Inhalt an.
-- **CSS-Cache:** `calendar.css` wird mit `?{filemtime}` als Version geladen (`['version' => …]` in `registerAndUseStyle`), sonst serviert der Browser nach einem Update das **alte** CSS (Joomla-Mediaversion `?xxxx` ändert sich bei Extension-Update nicht zuverlässig). Symptom war: Layout-Fix wirkte erst nach Strg+F5.
+- **Startdatum „nächster Termin"** (`start_date_mode`, Komponente **und** Modul – je eigene Einstellung, Default `today`): `today` | `next_event_if_empty` | `next_event`. Zweck: Bei seltenen Terminen sieht der Besucher sonst einen leeren aktuellen Monat (Wunsch von Georg, 10.08.2026).
+- Ermittlung **serverseitig** in `default.php` → `EventService::resolveStartDate($user, $mode, $view, $firstDay)` → als `initialDate` an FullCalendar (Haupt- **und** Mini-Kalender). Kein zweiter HTTP-Request, kein Flackern.
+- `next_event_if_empty` prüft den sichtbaren Zeitraum der Startansicht (Tag/Woche/Monat/Jahr, abhängig von `default_view` + `first_day`) und springt nur, wenn dort **gar nichts** liegt – auch vergangene Termine zählen als „nicht leer".
+- Suchfenster für den nächsten Termin: 24 Monate ab heute; nichts gefunden → kein Sprung (bleibt auf heute).
+- **Refactoring:** Event-Abfrage + Wiederholungen + Feiertags-/Ausnahme-Logik sind aus `ApiController` nach `EventService` gewandert (`buildEvents`, `getNextEventDate`, `hasEventsInRange`, `resolveStartDate`). Der Controller ist nur noch dünne JSON-Hülle.
 
 ## Lessons Learned
 

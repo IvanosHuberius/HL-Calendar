@@ -100,6 +100,18 @@
         </field>
 
         <field
+            name="start_date_mode"
+            type="list"
+            label="COM_CALENDAR_CONFIG_START_DATE_MODE"
+            description="COM_CALENDAR_CONFIG_START_DATE_MODE_DESC"
+            default="today"
+        >
+            <option value="today">COM_CALENDAR_START_MODE_TODAY</option>
+            <option value="next_event_if_empty">COM_CALENDAR_START_MODE_IF_EMPTY</option>
+            <option value="next_event">COM_CALENDAR_START_MODE_NEXT</option>
+        </field>
+
+        <field
             name="first_day"
             type="list"
             label="COM_CALENDAR_CONFIG_FIRST_DAY"

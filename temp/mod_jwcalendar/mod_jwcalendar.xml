@@ -7,7 +7,7 @@
     <authorEmail>support@huberlabs.ch</authorEmail>
     <authorUrl>https://www.eiwtestzone.ch/huberlabs-extensions/</authorUrl>
     <license>GNU General Public License version 2 or later</license>
-    <version>1.8.3</version>
+    <version>1.9.1</version>
     <description>MOD_JWCALENDAR_DESC</description>
     <namespace path="src">Jewe\Module\JwCalendar</namespace>
 
@@ -45,6 +45,17 @@
                     <option value="timeGridWeek">MOD_JWCALENDAR_VIEW_WEEK</option>
                     <option value="timeGridDay">MOD_JWCALENDAR_VIEW_DAY</option>
                     <option value="listMonth">MOD_JWCALENDAR_VIEW_LIST</option>
+                </field>
+                <field
+                    name="start_date_mode"
+                    type="list"
+                    label="MOD_JWCALENDAR_START_DATE_MODE"
+                    description="MOD_JWCALENDAR_START_DATE_MODE_DESC"
+                    default="today"
+                >
+                    <option value="today">MOD_JWCALENDAR_START_MODE_TODAY</option>
+                    <option value="next_event_if_empty">MOD_JWCALENDAR_START_MODE_IF_EMPTY</option>
+                    <option value="next_event">MOD_JWCALENDAR_START_MODE_NEXT</option>
                 </field>
                 <field
                     name="show_sidebar"

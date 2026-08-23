@@ -1,77 +1,52 @@
 # JW Calendar – Projektstatus
 
-## Aktueller Status
+**Stand:** 2026-08-18 · **Version in Arbeit:** 1.9.1 (gebaut + verifiziert) · **Live/released:** 1.8.3
 
-| Feld | Wert |
-|------|------|
-| **Version** | 1.8.3 ✅ VOLL RELEASED – GitHub-Release live, JED auf 1.8.3, Auto-Update von GitHub aktiv |
-| **Vorgänger** | 1.8.0 (live), 1.7.2 (JED seit 2026-04-04) |
-| **Status** | Verifiziert auf eiwtestzone (Georgisch). Release (GitHub v1.8.2 + XML + JED) offen |
-| **Offene Bugs** | Keine bekannt |
-| **Letzte Aktualisierung** | 2026-06-17 |
-| **Update-Server** | GitHub (raw) + eiwtestzone (Übergang für 1.7.2-Nutzer) |
-| **Download** | GitHub-Release v1.8.0 (`pkg_jwcalendar_v1.8.0.zip`) |
+---
 
-## Features (ausgeliefert)
+## ✅ Fertig
 
-- Joomla 6 Package (`pkg_jwcalendar`) mit Komponente + Modul
-- FullCalendar.js Integration (Monats-, Wochen-, Tages- und Listenansicht)
-- Kategorien mit Farbcodierung (5 Default-Kategorien)
-- Wiederkehrende Events (täglich, wöchentlich, monatlich, jährlich)
-- Erinnerungen (5/10/15/30/60 Min, 1 Tag vorher)
-- Drag & Drop (verschieben, resizen)
-- Responsives Design, Dark Mode
-- Mehrsprachig (DE + EN)
-- Backend-Konfiguration mit Live-Vorschau
-- Zugriffsrechte-System (ACL)
-- PDF-Dokumentation (DE + EN)
-- Update-Server für automatische Updates
+- **1.8.3 voll ausgeliefert:** GitHub-Release + Asset live, JED auf 1.8.3, JED-Download zeigt aufs GitHub-Release, Auto-Update läuft über GitHub.
+- **1.9.0 – Startdatum „nächster Termin"** (nur als Test an Georg, nie öffentlich released):
+  Backend-Option `start_date_mode` in Komponente **und** Modul (`Heute` / `Nächster Termin wenn Zeitraum leer` / `Immer nächster Termin`), serverseitig über `EventService::resolveStartDate()` → FullCalendar `initialDate`. Refactoring: Event-/Wiederholungs-/Feiertagslogik von `ApiController` nach `site/src/Service/EventService.php`, neuer Endpunkt `api.getNextEventDate`. **Von Georg bestätigt: „works nice".**
+- **1.9.1 – schmale Modulpositionen** (`pkg_jwcalendar_v1.9.1.zip`, 88.8 KB):
+  Von Georg gemeldet: Modul in schmaler Position (Sidebar, 3:12) zerfleddert. Reproduziert bei 320px Modulbreite – Seitenleiste 260px, Kalender 60px; ohne Seitenleiste überlappten Toolbar-Buttons den Titel und Kalenderwochen die Tageszahlen.
+  Fix rein in `calendar.css` über **Container-Queries** (`@container jwcal`), zwei Stufen ≤600px / ≤450px. Gilt automatisch für Komponente + Modul.
+  **Live auf eiwtestzone verifiziert:** bei 320px sind Seitenleiste und Kalender je 100% breit gestapelt, Toolbar `column`, keine Überlappung, kein horizontaler Überlauf.
 
-## Changelog
+## ➡️ Nächster Schritt
 
-### v1.8.3 (2026-06-18) – Bugfix (von Georg gemeldet) ✅ von Georg bestätigt
-- **Termin-Detail-Popup zeigte das Datum auf Englisch** (z.B. „Friday, 26 June 2026") trotz georgischer Seite – `formatDateRange()` nutzte noch Browser-`Intl`. Jetzt aus Joomla (`CAL_NAMES`), browserunabhängig. Auch der Wiederholungs-Dropdown (Tages-/Monatsnamen) umgestellt.
-- **Release:** GitHub-Release v1.8.3 + Asset live (von Claude via API erstellt), Update-Kette verifiziert. Offen: JED-Eintrag auf 1.8.3; eiwtestzone-XML (nur für 1.7.2-Nachzügler).
+1. **1.9.1 auf eiwtestzone installieren** und in einer schmalen Modulposition gegenprüfen (Sidebar links/rechts). Wichtig: Nach dem Update **Joomla-Cache leeren**; das CSS ist per `filemtime` versioniert, sollte also automatisch neu laden.
+2. ZIP nach `www.eiwtestzone.ch/huberlabs-extensions/` hochladen und **Georg schicken** (Mail-Entwurf kann Claude liefern).
+3. Nach Georgs OK releasen, in dieser Reihenfolge:
+   a) GitHub-Release **v1.9.1** + Asset `pkg_jwcalendar_v1.9.1.zip` (kein `gh` CLI → `git credential fill` + curl auf die API)
+   b) **erst danach** `update_server/jwcalendar_update.xml` auf 1.9.1 (Version + Download-URL), committen + pushen
+   c) JED-Eintrag auf 1.9.1 (Version + Download-URL)
 
-### v1.8.2 (2026-06-17) – Bugfixes (vom Georgier gemeldet) ✅ getestet (Release offen)
-- **Listenansicht-Datum:** In der Terminübersicht/Listenansicht fehlte das Datum (nur Wochentag) – Nebeneffekt der 1.8.1-Lokalisierung. Jetzt volles Datum.
-- **Modul/Liste zu lang:** `min-height: 80vh` am Wrapper machte alles bildschirmhoch. Jetzt nur Vollseiten-Komponente in Grid-Ansichten; Modul + Listenansicht passen sich dem Inhalt an.
-- **CSS-Cache-Busting:** `calendar.css` mit Datei-Zeitstempel-Version → Nutzer bekommen nach Update sofort das neue CSS (vorher erst nach Strg+F5).
+## ⏳ Offen
 
-### v1.8.1 (2026-06-16) – Lokalisierung ✅ getestet (Release offen)
-- **Vollständige Sprachunterstützung:** Kalender (Monat, Wochentage, Buttons, Titel) folgt jetzt der **Joomla-Seitensprache** – **browserunabhängig**
-- Root-Cause-Fix: FullCalendar holt Datumsnamen aus Browser-`Intl`; bei nicht unterstützter Sprache (z.B. Georgisch) fiel es auf die Browsersprache zurück. Jetzt werden Monats-/Wochentagsnamen aus Joomla (`Text::_`) gefüttert (`dayHeaderContent` + Titel-Override)
-- FullCalendar-Sprachpaket (`locales-all`) geladen → lokalisierte Buttons + RTL (Arabisch/Hebräisch via `dir="rtl"`)
-- Dialog-/Wiederholungs-/Feiertags-Texte als Sprachschlüssel; neue Sprachdateien: **ka-GE, it-IT, es-ES, fr-FR, pt-PT, ar-AA, ru-RU** (Englisch-Fallback)
+- `update_server/jwcalendar_update.xml` steht bewusst noch auf **1.8.3** – kein Update ausrollen, dessen Asset es noch nicht gibt (sonst 404).
+- 1.9.0 wird **übersprungen**: der öffentliche Release ist 1.9.1 (enthält beides).
+- *(optional, niedrige Prio)* eiwtestzone-Update-XML – nur relevant, falls noch jemand auf 1.7.2 hängt.
 
-### v1.8.0 (2026-06-07) – Feature-Release ✅ ausgeliefert
-- **Termin-Darstellung wählbar:** Backend-Einstellung „Termin-Darstellung (Monatsansicht)" – Punkt klein/mittel/groß oder farbiger Balken mit automatischem Text-Kontrast
-- **Feiertags-Aussetzung bei Wiederholungen:** Wiederkehrende Termine können an gesetzlichen Feiertagen automatisch aussetzen (OpenHolidays-API, mit Cache in `#__calendar_holidays`), Land + Bundesland pro Termin wählbar (DE/AT/CH mit Subdivisions)
-- **Manuelle Ausnahmedaten:** Pro Termin einzelne Tage ausschließen (Feld `exception_dates`)
-- **Update-Server auf GitHub umgestellt** (raw.githubusercontent.com)
-- Neue DB-Spalten: `skip_holidays`, `holiday_country`, `holiday_subdivision`, `exception_dates` (+ Update-SQL 1.8.0, neue Tabelle `#__calendar_holidays`)
-- **Fix Update-Erkennung:** `<client>site</client>` in der Update-XML ergänzt (sonst nimmt Joomla client_id=1/administrator an → Paket [client_id=0] wird nicht zugeordnet → Update bleibt unsichtbar)
-
-### v1.7.2 (2026-03-28) – Final Release
-- Letzte Bugfixes und Polishing
-- Auf JED veröffentlicht (2026-04-04)
-
-## Erledigt (1.8.0-Release)
-
-- [x] Staging-Test auf eiwtestzone (Joomla 6.1.1) – Update 1.7.2→1.8.0 erfolgreich
-- [x] GitHub-Release v1.8.0 mit ZIP-Asset
-- [x] `jwcalendar_update.xml` auf eiwtestzone hochgeladen (Übergang für 1.7.2-Nutzer)
-- [x] Auto-Update-Erkennung verifiziert (Update wird angeboten & installiert)
-- [x] Beide neuen Features im Frontend getestet (funktionieren)
-
-## Offen
-
-- *(optional)* eiwtestzone-`jwcalendar_update.xml` auf 1.8.3 — nur falls noch jemand auf 1.7.2 hängt
-- Sonst: nichts offen — 1.8.3 ist voll ausgeliefert ✅
+---
 
 ## Links
 
 - **GitHub:** https://github.com/IvanosHuberius/HL-Calendar
 - **JED:** https://extensions.joomla.org/extension/calendars-a-events/hl-calendar/
-- **Update-XML (GitHub):** https://raw.githubusercontent.com/IvanosHuberius/HL-Calendar/main/update_server/jwcalendar_update.xml
-- **Autor:** https://www.eiwtestzone.ch/huberlabs-extensions/
+- **Update-XML (GitHub raw):** https://raw.githubusercontent.com/IvanosHuberius/HL-Calendar/main/update_server/jwcalendar_update.xml
+- **Testseite:** https://www.eiwtestzone.ch (Modul-ID 110 = Kalender in der SP-Page-Builder-Seite `/sphlkalender`)
+- **Tester:** Georg Gabitsinashvili (GT Studio), info@gt-max.com
+
+## Changelog (kurz)
+
+| Version | Inhalt |
+|---------|--------|
+| 1.9.1 | Schmale Modulpositionen: Container-Queries statt Media-Queries |
+| 1.9.0 | Startdatum „nächster Termin" (Komponente + Modul), EventService-Refactoring |
+| 1.8.3 | Popup-/Wiederholungs-Datum browserunabhängig (`CAL_NAMES` statt `toLocale…`) |
+| 1.8.2 | Listenansicht-Datum, Höhe von Modul/Liste, CSS-Cache-Busting |
+| 1.8.1 | Volle Lokalisierung, 9 Sprachen, RTL, browserunabhängige Datumsnamen |
+| 1.8.0 | Termin-Darstellung wählbar, Feiertags-Aussetzung, Update-Server auf GitHub |
+| 1.7.2 | Final Release, JED-Veröffentlichung (2026-04-04) |
