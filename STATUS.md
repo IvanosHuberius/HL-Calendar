@@ -26,6 +26,9 @@ https://extensions.joomla.org/extension/calendars-a-events/hl-calendar/
 
 ## ⏳ Offen
 
+- **Kosmetik (für die nächste Version):** Das Paket erscheint in der Erweiterungsverwaltung als `PKG_JWCALENDAR` statt „HL Kalender". Grund: es wird nur `pkg_jwcalendar.ini` ausgeliefert, keine **`pkg_jwcalendar.sys.ini`** – Joomla nimmt für Namen in der Verwaltung aber die `.sys.ini`. Fix: `.sys.ini` (mind. de-DE + en-GB) mit `PKG_JWCALENDAR` / `PKG_JWCALENDAR_DESC` anlegen und im Manifest eintragen.
+- **Erledigt am 23.08.2026:** goldsfitness.ch und eiwtestzone.ch/huberlabs-extensions bekamen kein Update, weil dort das **Paket** nie installiert war (nur Komponente + Modul) → Joomla fand zu `pkg_jwcalendar`/`package` keine Erweiterung → `extension_id=0` → ausgeblendet. Auf beiden Seiten Paket-ZIP 1.9.1 nachinstalliert, Paket ist jetzt vorhanden. Siehe Stolperfalle in CLAUDE.md.
+
 - Nichts Kritisches. Bestehende Installationen bekommen 1.9.1 automatisch angeboten (Joomla prüft mit 6 h Cache).
 - *(optional, niedrige Prio)* eiwtestzone-Update-XML – nur relevant, falls noch jemand auf 1.7.2 hängt.
 - *(Aufräumen)* `pkg_jwcalendar_v1.9.0.zip` liegt noch lokal herum (nie veröffentlicht, bewusst nicht im Repo) – kann gelöscht werden.
