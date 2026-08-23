@@ -25,6 +25,7 @@
 - **Immer Komponente UND Modul synchron ändern** – jeder Fix muss in beide `default.php`.
 - **Event-/Wiederholungslogik NUR in `EventService`** (`site/src/Service/EventService.php`) – `ApiController` delegiert bloß. Wer Wiederholungen/Feiertage im Controller ändert, bringt Kalenderanzeige und „nächster Termin" auseinander.
 - **Modul benutzt eine Komponenten-Klasse** (`EventService`) – immer mit `class_exists()` + `try/catch` absichern, sonst White Screen, wenn jemand nur das Modul aktualisiert hat.
+- **JED hat ein eigenes Feld „Download URL" – bei jedem Release mitziehen!** Es enthält die Versionsnummer im Pfad (`…/releases/download/v<ver>/pkg_jwcalendar_v<ver>.zip`) und wird beim Versions-Update NICHT automatisch mitgeändert. Symptom: JED zeigt die neue Version, der Download-Button liefert aber die alte. Dauerhafte Alternative: `https://github.com/IvanosHuberius/HL-Calendar/releases/latest` eintragen (immer neuestes Release, nie wieder anfassen).
 - **Update-XML erst NACH dem GitHub-Release auf die neue Version setzen** – sonst bietet Joomla ein Update an, dessen Download-Asset noch gar nicht existiert (404 beim Installieren).
 - **PHP-CLI liegt unter `C:\Users\THE BEAST II\php\php.exe`** (nicht im PATH!) – nach jeder PHP-Änderung `& "C:\Users\THE BEAST II\php\php.exe" -l <datei>` laufen lassen.
 
