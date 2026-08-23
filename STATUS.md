@@ -1,39 +1,41 @@
 # JW Calendar – Projektstatus
 
-**Stand:** 2026-08-18 · **Version in Arbeit:** 1.9.1 (gebaut + verifiziert) · **Live/released:** 1.8.3
+**Stand:** 2026-08-18 · **Aktuelle Version:** 1.9.1 · **GitHub-Release + Auto-Update: LIVE ✅**
 
 ---
 
 ## ✅ Fertig
 
-- **1.8.3 voll ausgeliefert:** GitHub-Release + Asset live, JED auf 1.8.3, JED-Download zeigt aufs GitHub-Release, Auto-Update läuft über GitHub.
-- **1.9.0 – Startdatum „nächster Termin"** (nur als Test an Georg, nie öffentlich released):
-  Backend-Option `start_date_mode` in Komponente **und** Modul (`Heute` / `Nächster Termin wenn Zeitraum leer` / `Immer nächster Termin`), serverseitig über `EventService::resolveStartDate()` → FullCalendar `initialDate`. Refactoring: Event-/Wiederholungs-/Feiertagslogik von `ApiController` nach `site/src/Service/EventService.php`, neuer Endpunkt `api.getNextEventDate`. **Von Georg bestätigt: „works nice".**
-- **1.9.1 – schmale Modulpositionen** (`pkg_jwcalendar_v1.9.1.zip`, 88.8 KB):
-  Von Georg gemeldet: Modul in schmaler Position (Sidebar, 3:12) zerfleddert. Reproduziert bei 320px Modulbreite – Seitenleiste 260px, Kalender 60px; ohne Seitenleiste überlappten Toolbar-Buttons den Titel und Kalenderwochen die Tageszahlen.
-  Fix rein in `calendar.css` über **Container-Queries** (`@container jwcal`), zwei Stufen ≤600px / ≤450px. Gilt automatisch für Komponente + Modul.
-  **Live auf eiwtestzone verifiziert:** bei 320px sind Seitenleiste und Kalender je 100% breit gestapelt, Toolbar `column`, keine Überlappung, kein horizontaler Überlauf.
+- **1.9.1 veröffentlicht.** Enthält beides – 1.9.0 wurde übersprungen:
+  - **Startdatum „nächster Termin"** (`start_date_mode` in Komponente **und** Modul: `Heute` / `Nächster Termin wenn Zeitraum leer` / `Immer nächster Termin`). Serverseitig über `EventService::resolveStartDate()` → FullCalendar `initialDate`, kein Flackern; Wiederholungen, Feiertags-Aussetzung und Ausnahmedaten werden berücksichtigt.
+  - **Layoutfix für schmale Modulpositionen** über Container-Queries (`@container jwcal`, Stufen ≤600px/≤450px) – nur in `calendar.css`, gilt damit für Komponente + Modul.
+  - Refactoring: Event-/Wiederholungs-/Feiertagslogik zentral in `site/src/Service/EventService.php`; neuer Endpunkt `api.getNextEventDate`.
+- **Von Georg (GT Studio) getestet und freigegeben.**
+- **GitHub:** Commits `520a48d` (Feature+Fix) und `9b9ba71` (Update-XML) auf `main` gepusht. Release **v1.9.1** mit Asset `pkg_jwcalendar_v1.9.1.zip` (90.9 KB) live.
+- **Auto-Update aktiv:** Update-XML auf 1.9.1 umgestellt – **erst nach** dem Release, wie es sein muss. Kette Ende-zu-Ende geprüft: XML von GitHub raw → HTTP 200, `client=site`, `version=1.9.1`, Download-URL → HTTP 200.
 
 ## ➡️ Nächster Schritt
 
-1. **1.9.1 auf eiwtestzone installieren** und in einer schmalen Modulposition gegenprüfen (Sidebar links/rechts). Wichtig: Nach dem Update **Joomla-Cache leeren**; das CSS ist per `filemtime` versioniert, sollte also automatisch neu laden.
-2. ZIP nach `www.eiwtestzone.ch/huberlabs-extensions/` hochladen und **Georg schicken** (Mail-Entwurf kann Claude liefern).
-3. Nach Georgs OK releasen, in dieser Reihenfolge:
-   a) GitHub-Release **v1.9.1** + Asset `pkg_jwcalendar_v1.9.1.zip` (kein `gh` CLI → `git credential fill` + curl auf die API)
-   b) **erst danach** `update_server/jwcalendar_update.xml` auf 1.9.1 (Version + Download-URL), committen + pushen
-   c) JED-Eintrag auf 1.9.1 (Version + Download-URL)
+**JED-Eintrag auf 1.9.1 aktualisieren** (macht Ivan, Claude sagt an, was in welches Feld gehört):
+https://extensions.joomla.org/extension/calendars-a-events/hl-calendar/
+
+- Version → `1.9.1`
+- Download-URL → `https://github.com/IvanosHuberius/HL-Calendar/releases/download/v1.9.1/pkg_jwcalendar_v1.9.1.zip`
+- „Extensions File" (das von JED gehostete ZIP) → `pkg_jwcalendar_v1.9.1.zip` neu hochladen
+- Beschreibung/Changelog um die zwei Neuerungen ergänzen
 
 ## ⏳ Offen
 
-- `update_server/jwcalendar_update.xml` steht bewusst noch auf **1.8.3** – kein Update ausrollen, dessen Asset es noch nicht gibt (sonst 404).
-- 1.9.0 wird **übersprungen**: der öffentliche Release ist 1.9.1 (enthält beides).
+- Nichts Kritisches. Bestehende Installationen bekommen 1.9.1 automatisch angeboten (Joomla prüft mit 6 h Cache).
 - *(optional, niedrige Prio)* eiwtestzone-Update-XML – nur relevant, falls noch jemand auf 1.7.2 hängt.
+- *(Aufräumen)* `pkg_jwcalendar_v1.9.0.zip` liegt noch lokal herum (nie veröffentlicht, bewusst nicht im Repo) – kann gelöscht werden.
 
 ---
 
 ## Links
 
 - **GitHub:** https://github.com/IvanosHuberius/HL-Calendar
+- **Release 1.9.1:** https://github.com/IvanosHuberius/HL-Calendar/releases/tag/v1.9.1
 - **JED:** https://extensions.joomla.org/extension/calendars-a-events/hl-calendar/
 - **Update-XML (GitHub raw):** https://raw.githubusercontent.com/IvanosHuberius/HL-Calendar/main/update_server/jwcalendar_update.xml
 - **Testseite:** https://www.eiwtestzone.ch (Modul-ID 110 = Kalender in der SP-Page-Builder-Seite `/sphlkalender`)
@@ -43,8 +45,7 @@
 
 | Version | Inhalt |
 |---------|--------|
-| 1.9.1 | Schmale Modulpositionen: Container-Queries statt Media-Queries |
-| 1.9.0 | Startdatum „nächster Termin" (Komponente + Modul), EventService-Refactoring |
+| 1.9.1 | Startdatum „nächster Termin" + schmale Modulpositionen (Container-Queries); EventService-Refactoring |
 | 1.8.3 | Popup-/Wiederholungs-Datum browserunabhängig (`CAL_NAMES` statt `toLocale…`) |
 | 1.8.2 | Listenansicht-Datum, Höhe von Modul/Liste, CSS-Cache-Busting |
 | 1.8.1 | Volle Lokalisierung, 9 Sprachen, RTL, browserunabhängige Datumsnamen |
