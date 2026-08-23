@@ -1,6 +1,6 @@
 # JW Calendar – Projektstatus
 
-**Stand:** 2026-08-18 · **Aktuelle Version:** 1.9.1 · **GitHub-Release + Auto-Update: LIVE ✅**
+**Stand:** 2026-08-23 · **Aktuelle Version:** 1.9.1 · **VOLL RELEASED ✅** (GitHub + JED + Auto-Update)
 
 ---
 
@@ -11,18 +11,13 @@
   - **Layoutfix für schmale Modulpositionen** über Container-Queries (`@container jwcal`, Stufen ≤600px/≤450px) – nur in `calendar.css`, gilt damit für Komponente + Modul.
   - Refactoring: Event-/Wiederholungs-/Feiertagslogik zentral in `site/src/Service/EventService.php`; neuer Endpunkt `api.getNextEventDate`.
 - **Von Georg (GT Studio) getestet und freigegeben.**
+- **JED-Eintrag auf 1.9.1** (Version, Download-URL aufs GitHub-Release, ZIP, Beschreibung) – öffentlich verifiziert: die JED-Seite zeigt „HL Calendar (v1.9.1)".
 - **GitHub:** Commits `520a48d` (Feature+Fix) und `9b9ba71` (Update-XML) auf `main` gepusht. Release **v1.9.1** mit Asset `pkg_jwcalendar_v1.9.1.zip` (90.9 KB) live.
 - **Auto-Update aktiv:** Update-XML auf 1.9.1 umgestellt – **erst nach** dem Release, wie es sein muss. Kette Ende-zu-Ende geprüft: XML von GitHub raw → HTTP 200, `client=site`, `version=1.9.1`, Download-URL → HTTP 200.
 
 ## ➡️ Nächster Schritt
 
-**JED-Eintrag auf 1.9.1 aktualisieren** (macht Ivan, Claude sagt an, was in welches Feld gehört):
-https://extensions.joomla.org/extension/calendars-a-events/hl-calendar/
-
-- Version → `1.9.1`
-- Download-URL → `https://github.com/IvanosHuberius/HL-Calendar/releases/download/v1.9.1/pkg_jwcalendar_v1.9.1.zip`
-- „Extensions File" (das von JED gehostete ZIP) → `pkg_jwcalendar_v1.9.1.zip` neu hochladen
-- Beschreibung/Changelog um die zwei Neuerungen ergänzen
+Nichts offen. Auf Georgs nächste Rückmeldung warten.
 
 ## ⏳ Offen
 
