@@ -3,7 +3,7 @@
 ## Projekt-Kurzinfo
 - **Name:** HL Kalender (JW Calendar)
 - **Typ:** Joomla 6 Package (`pkg_jwcalendar`) mit Komponente + Modul
-- **Version:** 1.9.1 (schmale Modulpositionen; 1.9.0 = Startdatum „nächster Termin", nur an Georg als Test)
+- **Version:** 1.10.3 (Formatierungsleiste im Frontend-Dialog; enthält auch 1.9.2 = HTML in Beschreibungen)
 - **JED:** https://extensions.joomla.org/extension/calendars-a-events/hl-calendar/
 - **Autor:** huberlabs.ch (support@huberlabs.ch)
 - **Lizenz:** GPLv2+
@@ -22,6 +22,16 @@
 - **`min-height: 80vh` nur an `.jw-fullpage:not(.jw-view-list)`** – nie am nackten Wrapper, sonst wird auch Modul + Listenansicht bildschirmhoch.
 - **FullCalendar `locales-all` von `@fullcalendar/core@6.1.11/locales-all.global.min.js`** (NICHT `fullcalendar@…/locales-all` → 404).
 - **`gh` CLI ist nicht installiert** – GitHub-Releases via `git credential fill` (Token) + `curl` auf die API erstellen.
+- **Terminbeschreibungen sind Rich-Text (HTML) und werden per `innerHTML` ausgegeben** – das ist NUR erlaubt, weil `EventService::cleanDescription()` sie serverseitig filtert (`InputFilter([], [], 1, 1)`). Beschreibungen werden ungefiltert gespeichert (`'description' => 'raw'`), also gilt: **niemals `innerHTML` ohne diesen Filter**, sonst gespeichertes XSS – jeder, der Termine anlegen darf, könnte Skripte bei allen Besuchern ausführen.
+- **`.jw-popup-row` ist ein Flex-Container** – die Beschreibung braucht zusätzlich `.jw-popup-desc` (display:block), sonst stehen `<h6>` und `<p>` nebeneinander statt untereinander.
+- **Überschriften brauchen im CSS eine echte Größen-Abstufung** – `.jw-editor` und `.jw-popup-desc` hatten h1–h6 alle auf dieselbe Größe gesetzt. Folge: Der Format-Umschalter funktionierte einwandfrei (das HTML wechselte), sah aber aus wie „passiert nichts". Wer die Größen anfasst: h1–h6 müssen sichtbar verschieden bleiben.
+- **Dialoge schließen NICHT beim Klick daneben** (weder Termin- noch Kategorie-Dialog, Komponente wie Modul) – nur X, Abbrechen, Speichern und Esc. Ein Fehlklick hatte vorher alles Eingetippte verworfen. Nicht „aus Versehen" wieder einbauen.
+- **`execCommand('removeFormat')` räumt NUR Inline-Formate weg** – Überschriften und Ausrichtung bleiben stehen. Das erwartet niemand. Der „Formatierung entfernen"-Knopf (`jwClear`) macht deshalb selbst: removeFormat + unlink + `formatBlock <p>` + `text-align`/`align` von den betroffenen Blöcken abräumen (Blöcke **nach** dem `formatBlock` neu ermitteln, weil es das alte `style`-Attribut mitnimmt).
+- **Links in Beschreibung/Editor werden explizit unterstrichen** (`.jw-popup-desc a`, `.jw-editor a`) – viele Templates setzen seitenweit `a { text-decoration: none }` (auf eiwtestzone gewinnt `template.css` gegen Bootstrap). Ohne eigene Regel sieht es je nach Template anders aus, und Farbe allein darf einen Link nicht kennzeichnen (WCAG 1.4.1). Kein `!important` nötig, unsere Selektoren sind spezifischer.
+- **Die LIVE-Markierung hat im Editor immer Vorrang** vor der gemerkten (`savedRange`) – letztere ist nur Notnagel, wenn der Fokus den Editor wirklich verlassen hat (Linkleiste). Sonst passiert Folgendes: Lässt man beim Markieren die Maus **außerhalb** des Feldes los, feuert kein `mouseup` im Editor, die alte gemerkte Markierung bleibt stehen und wird beim nächsten Klick über die gute lebende gelegt → der Befehl läuft ins Leere („passiert nichts"). `savedRange` wird zudem als `cloneRange()` abgelegt, nicht als lebender Range.
+- **Toolbar-Knöpfe zeigen ihren Zustand** (`.jw-ed-on` via `queryCommandState`) – ohne das wirkt „fett" innerhalb einer Überschrift (schon fett) wie „passiert nichts", und man sucht den Fehler im falschen Code.
+- **Der Frontend-Editor liegt EINMAL in `media/js/jweditor.js`** – nicht inline in die Templates kopieren. Beide Templates laden ihn aus `media/com_calendar/js/` und rufen nur `JwEditor.init/getHtml/setHtml`. Das Beschreibungsfeld ist kein `<textarea>` mehr, sondern ein `contenteditable` → **niemals `.value` verwenden**, immer `JwEditor.getHtml()/setHtml()`.
+- **Was der Editor erzeugt, muss der Server-Filter durchlassen** – `JwEditor` (Whitelist beim Einfügen) und `EventService::cleanDescription()` (InputFilter) müssen zusammenpassen. Wer der Leiste einen Knopf hinzufügt, prüft vorher, ob der Tag den Filter überlebt, sonst verschwindet die Formatierung beim Speichern.
 - **Immer Komponente UND Modul synchron ändern** – jeder Fix muss in beide `default.php`.
 - **Event-/Wiederholungslogik NUR in `EventService`** (`site/src/Service/EventService.php`) – `ApiController` delegiert bloß. Wer Wiederholungen/Feiertage im Controller ändert, bringt Kalenderanzeige und „nächster Termin" auseinander.
 - **Modul benutzt eine Komponenten-Klasse** (`EventService`) – immer mit `class_exists()` + `try/catch` absichern, sonst White Screen, wenn jemand nur das Modul aktualisiert hat.
@@ -133,6 +143,23 @@ Der Build erstellt drei ZIPs: `com_calendar.zip`, `mod_jwcalendar.zip` und `pkg_
 - **Lösung (browserunabhängig):** Monats-/Wochentagsnamen serverseitig aus Joomla holen (`Text::_('JUNE')`, `Text::_('MONDAY')`, `Text::_('MON')` … Standard-Joomla-Datumskonstanten) → als `CAL_NAMES` ins JS → per `dayHeaderContent` (Wochentage) + Titel-Override in `datesSet` (Monat) rendern. In `default.php` von Komponente + Modul (Haupt- + Mini-Kalender).
 - `locales-all`-CDN für FullCalendar: `https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.11/locales-all.global.min.js` (registriert `globalLocales`; liefert lokalisierte Button-Texte/RTL). NICHT `fullcalendar@.../locales-all` (404).
 - Dialog-/JS-Texte als `Text::_()`-Schlüssel im `L`-Objekt; Sprachdateien unter `site/language/<lang>/` (Komponente) und `language/<lang>/` (Modul). RTL via `$lang->isRtl()` → `dir="rtl"` am Wrapper.
+
+## Feature 1.10.0/1.10.1 – Formatierungsleiste im Frontend-Dialog
+
+- Im Frontend war die Beschreibung ein nacktes `<textarea>`; formatieren ging nur, wenn man HTML von Hand tippte. Im **Backend** gab es die Leiste längst (`event.xml`: `type="editor" filter="safehtml"`).
+- Neu: eigene, abhängigkeitsfreie Mini-Leiste in `media/js/jweditor.js` (von Komponente UND Modul genutzt): Format (Normal/H1–H6), Fett, Kursiv, Unterstrichen, Durchgestrichen, Aufzählung, Nummerierung, Ausrichtung links/mitte/rechts, Link (mit „in neuem Tab" → `target="_blank" rel="noopener noreferrer"`), Link entfernen, Formatierung entfernen, **Quelltext-Umschalter** (`<>`) zum Tippen von reinem HTML.
+- Beim Einfügen aus Word/Web wird clientseitig auf die erlaubten Tags reduziert (`mso-`-Müll, `<style>`, Skripte, `on*` raus); `javascript:`/`data:`-URLs werden abgewiesen, Adressen ohne Schema bekommen `https://`.
+- Im Browser getestet: 14 Strukturprüfungen, alle Toolbar-Befehle, Link mit/ohne neuem Tab, abgewehrter `javascript:`-Link, 5 Einfüge-Szenarien.
+- 18 neue Sprachschlüssel (`*_ED_*`) in allen 9 Sprachen, „Abbrechen" über Joomlas `JCANCEL`.
+- **1.10.2 (von Ivan im Test gefunden):** Zusätzlich gehärtet: die lebende Textmarkierung hat jetzt Vorrang (siehe Stolperfalle) – erklärt sprunghafte „Formatierung geht nicht"-Fälle, die sich nicht reproduzieren ließen. „Formatierung entfernen" ließ Überschriften stehen (siehe Stolperfalle) – räumt jetzt auch Blockformat, Ausrichtung und Links weg. Zusätzlich zeigen Fett/Kursiv/Unterstrichen/Durchgestrichen/Listen/Ausrichtung ihren Aktiv-Zustand.
+- **1.10.1 (von Ivan im Test gefunden):** (1) Dialoge schlossen beim Klick daneben → Eingaben weg; Overlay-Klick entfernt. (2) h1–h6 waren im CSS alle gleich groß → Format-Wechsel wirkte folgenlos; echte Abstufung (Editor 24/20/17/15/14/13px, Popup 19/17/15/14/13/12px). (3) Das Format-Dropdown sprang nach jeder Wahl auf „Normal" zurück; es spiegelt jetzt das Format an der Cursorposition.
+
+## Fix 1.9.2 – HTML in Terminbeschreibungen
+
+- Beschreibungen mit Markup (`<h6>`, `<p>`, Listen, Links) wurden im Detail-Popup als **roher Code** angezeigt – Komponente wie Modul nutzten `textContent`. (Von Georg gemeldet, 10.09.2026.)
+- Fix: Ausgabe per `innerHTML`, dazu **serverseitige Bereinigung** in `EventService::cleanDescription()` (zentral, gilt für Basis-Termine UND Wiederholungen). Neues CSS `.jw-popup-desc` bändigt Überschriften/Listen/Bilder im schmalen Popup (max. 240px Höhe, dann scrollbar).
+- Filter mit 13 Angriffsvarianten lokal getestet (script, onerror/onload/onclick, javascript:- und data:-URLs, iframe/object/embed, verschachteltes `<scr<script>ipt>`): kein ausführbarer Rest, normale Formatierung unverändert erhalten.
+- Ebenfalls in 1.9.2: `pkg_jwcalendar.sys.ini` für alle 9 Sprachen ergänzt – das Paket heißt in der Erweiterungsverwaltung jetzt „HL Kalender" statt `PKG_JWCALENDAR`.
 
 ## Fix 1.9.1 – schmale Modulpositionen
 

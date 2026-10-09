@@ -872,6 +872,77 @@
     gap: 6px;
 }
 
+/* Event description: rendered rich text (headings, lists, links, images).
+   Needs its own block context – .jw-popup-row is a flex row, which would lay
+   out <h6> and <p> side by side. */
+.jw-popup-row.jw-popup-desc {
+    display: block;
+    line-height: 1.45;
+    max-height: 240px;
+    overflow-y: auto;
+}
+
+.jw-popup-desc > :first-child { margin-top: 0; }
+.jw-popup-desc > :last-child { margin-bottom: 0; }
+
+.jw-popup-desc p,
+.jw-popup-desc ul,
+.jw-popup-desc ol,
+.jw-popup-desc blockquote {
+    margin: 0 0 8px;
+}
+
+.jw-popup-desc ul,
+.jw-popup-desc ol {
+    padding-left: 20px;
+}
+
+.jw-popup-desc h1,
+.jw-popup-desc h2,
+.jw-popup-desc h3,
+.jw-popup-desc h4,
+.jw-popup-desc h5,
+.jw-popup-desc h6 {
+    font-weight: 600;
+    line-height: 1.3;
+    margin: 0 0 4px;
+    color: var(--jw-text);
+}
+
+/* Headings must stay visibly different from each other – a flat size for all
+   of them makes switching H1 → H4 look like nothing happened. */
+.jw-popup-desc h1 { font-size: 19px; }
+.jw-popup-desc h2 { font-size: 17px; }
+.jw-popup-desc h3 { font-size: 15px; }
+.jw-popup-desc h4 { font-size: 14px; }
+.jw-popup-desc h5 { font-size: 13px; }
+.jw-popup-desc h6 { font-size: 12px; }
+
+/* Templates often kill link underlines site-wide (a { text-decoration: none }).
+   In a description, colour alone must not be the only cue that something is a
+   link – so we set it explicitly and stay identical in every template. */
+.jw-popup-desc a {
+    color: var(--jw-primary);
+    text-decoration: underline;
+}
+
+.jw-popup-desc img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 4px;
+}
+
+.jw-popup-desc table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.jw-popup-desc th,
+.jw-popup-desc td {
+    border: 1px solid var(--jw-border);
+    padding: 2px 4px;
+}
+
 .jw-popup-row svg {
     flex-shrink: 0;
     margin-top: 1px;
@@ -1059,4 +1130,246 @@
         font-size: 12px;
         padding: 2px 4px !important;
     }
+}
+
+/* ========================================
+   Mini rich text editor (event description)
+   ======================================== */
+
+.jw-editor-wrap {
+    border: 1px solid var(--jw-border);
+    border-radius: var(--jw-radius, 8px);
+    background: var(--jw-bg);
+    overflow: hidden;
+}
+
+.jw-ed-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2px;
+    padding: 5px 6px;
+    border-bottom: 1px solid var(--jw-border);
+    background: var(--jw-bg-hover);
+}
+
+.jw-ed-sep {
+    width: 1px;
+    align-self: stretch;
+    margin: 2px 4px;
+    background: var(--jw-border);
+}
+
+.jw-ed-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--jw-text);
+    font-size: 14px;
+    line-height: 1;
+    cursor: pointer;
+    transition: background .12s, border-color .12s;
+}
+
+.jw-ed-btn:hover {
+    background: var(--jw-bg);
+    border-color: var(--jw-border);
+}
+
+.jw-ed-btn svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.jw-ed-btn svg text {
+    fill: currentColor;
+    stroke: none;
+}
+
+/* Active state: without it, applying bold inside a heading (already bold)
+   gives no feedback at all and looks broken. */
+.jw-ed-btn.jw-ed-on {
+    background: var(--jw-primary-light);
+    border-color: var(--jw-primary-light);
+    color: var(--jw-primary);
+}
+
+.jw-ed-b { font-weight: 700; }
+.jw-ed-i { font-style: italic; }
+.jw-ed-u { text-decoration: underline; }
+.jw-ed-s { text-decoration: line-through; }
+
+.jw-ed-format {
+    height: 28px;
+    padding: 0 4px;
+    border: 1px solid var(--jw-border);
+    border-radius: 4px;
+    background: var(--jw-bg);
+    color: var(--jw-text);
+    font-family: var(--jw-font);
+    font-size: 12px;
+    cursor: pointer;
+}
+
+/* While raw HTML is being edited only the source toggle stays usable */
+.jw-ed-toolbar.jw-ed-sourcemode .jw-ed-btn:not(.jw-ed-srcbtn),
+.jw-ed-toolbar.jw-ed-sourcemode .jw-ed-format {
+    opacity: .35;
+    pointer-events: none;
+}
+
+.jw-ed-toolbar.jw-ed-sourcemode .jw-ed-srcbtn {
+    background: var(--jw-primary-light);
+    border-color: var(--jw-primary-light);
+    color: var(--jw-primary);
+}
+
+.jw-editor {
+    min-height: 90px;
+    max-height: 260px;
+    overflow-y: auto;
+    padding: 8px 10px;
+    font-family: var(--jw-font);
+    font-size: 14px;
+    line-height: 1.45;
+    color: var(--jw-text);
+    outline: none;
+}
+
+.jw-editor:empty::before {
+    content: attr(data-placeholder);
+    color: var(--jw-text-light);
+}
+
+.jw-editor:focus {
+    background: var(--jw-bg);
+}
+
+.jw-editor > :first-child { margin-top: 0; }
+.jw-editor > :last-child { margin-bottom: 0; }
+
+.jw-editor p,
+.jw-editor ul,
+.jw-editor ol {
+    margin: 0 0 8px;
+}
+
+.jw-editor ul,
+.jw-editor ol {
+    padding-left: 20px;
+}
+
+.jw-editor h1,
+.jw-editor h2,
+.jw-editor h3,
+.jw-editor h4,
+.jw-editor h5,
+.jw-editor h6 {
+    font-weight: 600;
+    line-height: 1.3;
+    margin: 0 0 6px;
+}
+
+/* Same ramp as the popup, so what you type is what you get. */
+.jw-editor h1 { font-size: 24px; }
+.jw-editor h2 { font-size: 20px; }
+.jw-editor h3 { font-size: 17px; }
+.jw-editor h4 { font-size: 15px; }
+.jw-editor h5 { font-size: 14px; }
+.jw-editor h6 { font-size: 13px; }
+
+.jw-editor a {
+    color: var(--jw-primary);
+    text-decoration: underline;
+}
+
+.jw-editor img {
+    max-width: 100%;
+    height: auto;
+}
+
+.jw-ed-source {
+    display: block;
+    width: 100%;
+    min-height: 90px;
+    max-height: 260px;
+    padding: 8px 10px;
+    border: none;
+    background: var(--jw-bg);
+    color: var(--jw-text);
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12.5px;
+    line-height: 1.5;
+    resize: vertical;
+    outline: none;
+}
+
+.jw-ed-linkbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    padding: 6px;
+    border-top: 1px solid var(--jw-border);
+    background: var(--jw-bg-hover);
+}
+
+.jw-ed-linkurl {
+    flex: 1 1 180px;
+    min-width: 0;
+    height: 28px;
+    padding: 0 8px;
+    border: 1px solid var(--jw-border);
+    border-radius: 4px;
+    background: var(--jw-bg);
+    color: var(--jw-text);
+    font-family: var(--jw-font);
+    font-size: 13px;
+}
+
+.jw-ed-linktab {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--jw-text);
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.jw-ed-linkok,
+.jw-ed-linkcancel {
+    height: 28px;
+    padding: 0 10px;
+    border: 1px solid var(--jw-border);
+    border-radius: 4px;
+    background: var(--jw-bg);
+    color: var(--jw-text);
+    font-family: var(--jw-font);
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.jw-ed-linkok {
+    background: var(--jw-primary);
+    border-color: var(--jw-primary);
+    color: #fff;
+}
+
+/* Narrow module dialogs: keep the toolbar usable instead of overflowing */
+@container jwcal (max-width: 450px) {
+    .jw-ed-toolbar { gap: 1px; padding: 4px; }
+    .jw-ed-btn { width: 26px; height: 26px; }
+    .jw-ed-sep { margin: 2px; }
 }

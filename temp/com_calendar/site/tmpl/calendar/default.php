@@ -21,6 +21,8 @@ $wa->registerAndUseScript('com_calendar.fullcalendar', 'https://cdn.jsdelivr.net
 $wa->registerAndUseScript('com_calendar.fclocales', 'https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.11/locales-all.global.min.js', [], ['defer' => false], ['com_calendar.fullcalendar']);
 $cssVer = @filemtime(JPATH_ROOT . '/media/com_calendar/css/calendar.css') ?: '1';
 $wa->registerAndUseStyle('com_calendar.style', 'media/com_calendar/css/calendar.css', ['version' => (string) $cssVer]);
+$edVer = @filemtime(JPATH_ROOT . '/media/com_calendar/js/jweditor.js') ?: '1';
+$wa->registerAndUseScript('com_calendar.jweditor', 'media/com_calendar/js/jweditor.js', ['version' => (string) $edVer], ['defer' => false]);
 
 $baseUrl = Uri::root() . 'index.php?option=com_calendar&task=api.';
 $token = Session::getFormToken();
@@ -155,7 +157,9 @@ $primaryLight = sprintf('#%02x%02x%02x', min(255, $pr + round((255 - $pr) * 0.85
 
             <div class="jw-form-group">
                 <label for="eventDescription"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="17" y1="10" x2="3" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="17" y1="18" x2="3" y2="18"/></svg> <?php echo Text::_('JGLOBAL_DESCRIPTION'); ?></label>
-                <textarea id="eventDescription" class="jw-input jw-textarea" rows="3" placeholder="<?php echo Text::_('COM_CALENDAR_PLACEHOLDER_DESCRIPTION'); ?>"></textarea>
+                <div class="jw-editor-wrap">
+                    <div id="eventDescription" class="jw-editor" data-placeholder="<?php echo htmlspecialchars(Text::_('COM_CALENDAR_PLACEHOLDER_DESCRIPTION'), ENT_QUOTES, 'UTF-8'); ?>"></div>
+                </div>
             </div>
 
             <div class="jw-form-group">
@@ -234,7 +238,7 @@ $primaryLight = sprintf('#%02x%02x%02x', min(255, $pr + round((255 - $pr) * 0.85
     </div>
     <div class="jw-popup-body">
         <div id="popupTime" class="jw-popup-row"></div>
-        <div id="popupDescription" class="jw-popup-row" style="display:none;"></div>
+        <div id="popupDescription" class="jw-popup-row jw-popup-desc" style="display:none;"></div>
         <div id="popupCategory" class="jw-popup-row"></div>
     </div>
     <div class="jw-popup-footer" id="popupActions" style="display:none;">
@@ -251,7 +255,7 @@ $primaryLight = sprintf('#%02x%02x%02x', min(255, $pr + round((255 - $pr) * 0.85
 
 <!-- Category Modal -->
 <?php if ($isSuperUser): ?>
-<div id="categoryModal" class="jw-modal-overlay" style="display:none" onclick="if(event.target===this)closeCategoryModal()">
+<div id="categoryModal" class="jw-modal-overlay" style="display:none">
     <div class="jw-modal jw-modal-sm">
         <div class="jw-modal-header">
             <h2 id="categoryModalTitle">Kategorie hinzufügen</h2>
@@ -701,7 +705,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const descEl = document.getElementById('popupDescription');
         if (props.description) {
-            descEl.textContent = props.description;
+            // Descriptions are rich text; the server sanitises them in EventService
+            descEl.innerHTML = props.description;
             descEl.style.display = '';
         } else {
             descEl.style.display = 'none';
@@ -756,7 +761,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         document.getElementById('eventEnd').value = toLocalInput(editEnd, event.allDay);
         updateRecurrenceOptions();
-        document.getElementById('eventDescription').value = props.description || '';
+        JwEditor.setHtml(document.getElementById('eventDescription'), props.description || '');
         document.getElementById('eventCategory').value = props.category_id || 0;
         if (props.recurrence_type === 'custom' || (props.recurrence_type === 'daily' && props.recurrence_interval > 1)) {
             document.getElementById('eventRecurrence').value = 'custom';
@@ -824,7 +829,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         document.getElementById('eventEnd').value = toLocalInput(endDate, allDay);
         updateRecurrenceOptions();
-        document.getElementById('eventDescription').value = '';
+        JwEditor.setHtml(document.getElementById('eventDescription'), '');
         document.getElementById('eventCategory').value = '0';
         document.getElementById('eventRecurrence').value = 'none';
         document.getElementById('customIntervalGroup').style.display = 'none';
@@ -876,7 +881,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const params = new URLSearchParams();
         params.append('id', document.getElementById('eventId').value);
         params.append('title', title);
-        params.append('description', document.getElementById('eventDescription').value);
+        params.append('description', JwEditor.getHtml(document.getElementById('eventDescription')));
         params.append('all_day', allDay ? 1 : 0);
         params.append('category_id', catVal);
         let saveRecType = recType;
@@ -1105,6 +1110,28 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Event handlers
     initCategories();
+
+    JwEditor.init(document.getElementById('eventDescription'), <?php echo json_encode([
+        'normal'      => Text::_('COM_CALENDAR_ED_NORMAL'),
+        'format'      => Text::_('COM_CALENDAR_ED_FORMAT'),
+        'bold'        => Text::_('COM_CALENDAR_ED_BOLD'),
+        'italic'      => Text::_('COM_CALENDAR_ED_ITALIC'),
+        'underline'   => Text::_('COM_CALENDAR_ED_UNDERLINE'),
+        'strike'      => Text::_('COM_CALENDAR_ED_STRIKE'),
+        'bulletList'  => Text::_('COM_CALENDAR_ED_BULLET_LIST'),
+        'numberList'  => Text::_('COM_CALENDAR_ED_NUMBER_LIST'),
+        'alignLeft'   => Text::_('COM_CALENDAR_ED_ALIGN_LEFT'),
+        'alignCenter' => Text::_('COM_CALENDAR_ED_ALIGN_CENTER'),
+        'alignRight'  => Text::_('COM_CALENDAR_ED_ALIGN_RIGHT'),
+        'link'        => Text::_('COM_CALENDAR_ED_LINK'),
+        'unlink'      => Text::_('COM_CALENDAR_ED_UNLINK'),
+        'clearFormat' => Text::_('COM_CALENDAR_ED_CLEAR'),
+        'source'      => Text::_('COM_CALENDAR_ED_SOURCE'),
+        'linkUrl'     => Text::_('COM_CALENDAR_ED_LINK_URL'),
+        'linkNewTab'  => Text::_('COM_CALENDAR_ED_LINK_NEW_TAB'),
+        'insert'      => Text::_('COM_CALENDAR_ED_INSERT'),
+        'cancel'      => Text::_('JCANCEL'),
+    ], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE); ?>);
     fillCountrySelect(document.getElementById('eventHolidayCountry'));
     fillSubdivSelect(document.getElementById('eventHolidaySubdiv'), 'DE', '');
 
@@ -1141,10 +1168,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Close modal on overlay click
-    document.getElementById('eventModal').addEventListener('click', function(e) {
-        if (e.target === this) closeModal();
-    });
+    // Deliberately NO close-on-overlay-click: a stray click next to the dialog
+    // used to throw away everything that had been typed. Closing is only via
+    // the X, Cancel or Save.
 
     // Keyboard shortcuts
     document.addEventListener('keydown', function(e) {

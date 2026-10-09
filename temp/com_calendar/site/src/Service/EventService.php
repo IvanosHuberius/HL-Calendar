@@ -9,6 +9,7 @@ namespace Jewe\Component\Calendar\Site\Service;
 defined('_JEXEC') or die;
 
 use Joomla\CMS\Factory;
+use Joomla\CMS\Filter\InputFilter;
 
 /**
  * Central place where events are read from the database and expanded into the
@@ -20,6 +21,35 @@ use Joomla\CMS\Factory;
  */
 class EventService
 {
+    /** Lazily created HTML filter for event descriptions. */
+    private ?InputFilter $descriptionFilter = null;
+
+    /**
+     * Event descriptions are stored as raw HTML (the backend editor produces
+     * markup, and the frontend textarea accepts it). They are rendered as HTML
+     * in the detail popup, so they MUST be sanitised before they leave the
+     * server — otherwise anyone allowed to create events could inject scripts
+     * that run for every visitor.
+     *
+     * Blacklist mode with xssAuto keeps ordinary formatting (h1–h6, p, ul, ol,
+     * strong, em, a, img, table …) and removes script/iframe/style, on* event
+     * handlers and javascript: URLs.
+     */
+    private function cleanDescription($description): string
+    {
+        $description = (string) $description;
+
+        if ($description === '') {
+            return '';
+        }
+
+        if ($this->descriptionFilter === null) {
+            $this->descriptionFilter = new InputFilter([], [], 1, 1);
+        }
+
+        return $this->descriptionFilter->clean($description, 'html');
+    }
+
     /**
      * Build the FullCalendar event payload for a date range.
      *
@@ -76,7 +106,7 @@ class EventService
                 'backgroundColor' => $event->category_color ?: '#3788d8',
                 'borderColor' => $event->category_color ?: '#3788d8',
                 'extendedProps' => [
-                    'description' => $event->description ?: '',
+                    'description' => $this->cleanDescription($event->description),
                     'category_id' => (int) $event->category_id,
                     'category_title' => $event->category_title ?: '',
                     'recurrence_type' => $event->recurrence_type,
@@ -296,7 +326,7 @@ class EventService
                     'backgroundColor' => $event->category_color ?: '#3788d8',
                     'borderColor' => $event->category_color ?: '#3788d8',
                     'extendedProps' => [
-                        'description' => $event->description ?: '',
+                        'description' => $this->cleanDescription($event->description),
                         'category_id' => (int) $event->category_id,
                         'category_title' => $event->category_title ?: '',
                         'is_recurrence' => true,
