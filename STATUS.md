@@ -1,6 +1,6 @@
 # JW Calendar – Projektstatus
 
-**Stand:** 2026-10-09 · **Aktuelle Version:** 1.10.3 · **GitHub-Release + Auto-Update: LIVE ✅** · JED: offen
+**Stand:** 2026-10-09 · **Aktuelle Version:** 1.10.3 · **VOLL RELEASED ✅** (GitHub + Auto-Update + JED)
 
 ---
 
@@ -15,7 +15,7 @@
 
 ## ➡️ Nächster Schritt
 
-**JED-Eintrag auf 1.10.3** (macht Ivan): Version · **Download URL** (!) · Extensions File · Beschreibung „What's new".
+Nichts offen. JED zeigt öffentlich „HL Calendar (v1.10.3)", Download-Button zeigt auf das v1.10.3-Release (verifiziert 2026-10-09). Ivan bestätigt: Updates auf seinen Seiten haben funktioniert.
 
 ## ⏳ Offen
 
